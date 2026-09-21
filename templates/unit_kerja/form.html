@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center border-bottom py-3">
+        <h5 class="mb-0 fw-bold">{{ title }}</h5>
+      </div>
+      <div class="card-body py-4">
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="row">
+            <!-- 1. KODE UNIT KERJA -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Kode Unit Kerja</label>
+              {{ form.kode }}
+              {% if form.kode.errors %}
+                <div class="text-danger small mt-1">{{ form.kode.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- 2. JENIS UNIT KERJA -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Jenis Unit Kerja</label>
+              {{ form.jenis }}
+              {% if form.jenis.errors %}
+                <div class="text-danger small mt-1">{{ form.jenis.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- 3. NAMA UNIT KERJA -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Nama Unit Kerja</label>
+            {{ form.nama }}
+            {% if form.nama.errors %}
+              <div class="text-danger small mt-1">{{ form.nama.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- 4. INDUK UNIT KERJA -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Induk Unit Kerja (Parent)</label>
+            {{ form.parent }}
+            {% if form.parent.errors %}
+              <div class="text-danger small mt-1">{{ form.parent.errors.0 }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-1">* Kosongkan jika unit kerja ini berada di tingkat paling atas (Top Level).</small>
+          </div>
+
+          <!-- 5. STATUS AKTIF -->
+          <div class="mb-3 form-check">
+            {{ form.is_active }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">Status Aktif</label>
+          </div>
+
+          <!-- TOMBOL AKSI -->
+          <div class="mt-4 pt-2 border-top d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bx bx-save me-1"></i> Simpan Data
+            </button>
+            <a href="{% url 'unit_kerja_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

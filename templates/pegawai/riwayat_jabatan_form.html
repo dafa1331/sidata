@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+<!-- 1. SELECT2 STYLES -->
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center border-bottom py-3">
+        <h5 class="mb-0 fw-bold"><i class="bx bx-briefcase me-2 text-primary"></i> {{ title }}</h5>
+      </div>
+      <div class="card-body py-4">
+
+        <!-- ERROR NON-FIELD UMUM (JIKA BUKAN STATUS TERKUNCI) -->
+        {% if form.non_field_errors %}
+          {% for error in form.non_field_errors %}
+            {% if not "[OCCUPIED]" in error %}
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bx bx-error-circle me-1"></i> {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- FIELD PEGAWAI (TERSEDIA JIKA MEMAKAI ENTRYJABATANFORM) -->
+          {% if form.pegawai %}
+            <div class="mb-3">
+              <label class="form-label fw-bold">{{ form.pegawai.label }}</label>
+              {{ form.pegawai }}
+              {% if form.pegawai.errors %}<div class="text-danger small mt-1">{{ form.pegawai.errors.0 }}</div>{% endif %}
+            </div>
+            <hr class="my-3">
+          {% endif %}
+
+          <!-- 1. JABATAN -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Pilih Jabatan</label>
+            {{ form.jabatan }}
+            {% if form.jabatan.errors %}<div class="text-danger small mt-1">{{ form.jabatan.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="row">
+            <!-- 2. UNIT KERJA -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Unit Kerja / Satuan Kerja</label>
+              {{ form.unit_kerja }}
+              {% if form.unit_kerja.errors %}<div class="text-danger small mt-1">{{ form.unit_kerja.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- 3. INFO JENIS JABATAN -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Jenis & Jenjang Jabatan</label>
+              <input type="text" id="info_jenis_jabatan" class="form-control bg-light" value="Otomatis terisi dari master" readonly>
+            </div>
+          </div>
+
+          <!-- 4. STATUS PELANTIKAN / PENGANGKATAN (FIELD BARU) -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Status Pelantikan / Pengangkatan</label>
+            {% if form.status_pelantikan %}
+              {{ form.status_pelantikan }}
+              {% if form.status_pelantikan.errors %}<div class="text-danger small mt-1">{{ form.status_pelantikan.errors.0 }}</div>{% endif %}
+            {% else %}
+              <select name="status_pelantikan" class="form-select" id="id_status_pelantikan">
+                <option value="DILANTIK" selected>Definitif / Sudah Dilantik (Jabatan Fungsional/Struktural)</option>
+                <option value="BELUM_DILANTIK">CPNS / Tugas Pelaksana (Belum Dilantik JF)</option>
+              </select>
+            {% endif %}
+            <small class="text-muted d-block mt-1">
+              Pilih <strong>CPNS / Tugas Pelaksana</strong> jika pegawai menduduki formasi JF namun belum diambil sumpah/dilantik secara resmi.
+            </small>
+          </div>
+
+          <!-- 5. TMT & TANGGAL SK -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">TMT Jabatan</label>
+              {{ form.tmt_jabatan }}
+              {% if form.tmt_jabatan.errors %}<div class="text-danger small mt-1">{{ form.tmt_jabatan.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Tanggal SK</label>
+              {{ form.tanggal_sk }}
+              {% if form.tanggal_sk.errors %}<div class="text-danger small mt-1">{{ form.tanggal_sk.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- 6. NOMOR SK & PEJABAT PENETAP -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Nomor SK Jabatan</label>
+              {{ form.nomor_sk }}
+              {% if form.nomor_sk.errors %}<div class="text-danger small mt-1">{{ form.nomor_sk.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Pejabat Penetap SK</label>
+              {{ form.pejabat_penetap }}
+              {% if form.pejabat_penetap.errors %}<div class="text-danger small mt-1">{{ form.pejabat_penetap.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- 7. FILE SK PDF -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Upload Berkas SK Jabatan (PDF)</label>
+            {{ form.file_sk }}
+            {% if form.file_sk.errors %}<div class="text-danger small mt-1">{{ form.file_sk.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- TOMBOL AKSI -->
+          <div class="mt-4 pt-2 border-top d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bx bx-save me-1"></i> Simpan Riwayat Jabatan
+            </button>
+            {% if pegawai %}
+              <a href="{% url 'pegawai_detail' pegawai.pk %}?tab=jabatan" class="btn btn-outline-secondary">Batal</a>
+            {% else %}
+              <a href="{% url 'pegawai_list' %}" class="btn btn-outline-secondary">Batal</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL POP-UP: INFORMASI PEJABAT AKTIF -->
+<!-- ========================================== -->
+<div class="modal fade" id="modalJabatanTerkunci" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg overflow-hidden">
+      
+      <div class="modal-header bg-danger text-white py-3">
+        <h5 class="modal-title text-white d-flex align-items-center fw-bold mb-0">
+          <i class="bx bx-lock-alt fs-3 me-2"></i> Jabatan Struktural Terkunci!
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <p class="text-muted small mb-3">
+          Jabatan Struktural ini <strong>tidak dapat diisi</strong> karena saat ini masih aktif diduduki oleh pejabat berikut:
+        </p>
+
+        <div class="bg-light p-3 rounded border border-danger-subtle mb-3">
+          <div class="d-flex align-items-center mb-2">
+            <div class="avatar avatar-md me-3 bg-label-danger rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bx bx-user fs-3"></i>
+            </div>
+            <div>
+              <h6 class="mb-0 fw-bold text-dark" id="occ_nama">-</h6>
+              <small class="text-muted d-block">NIP: <span id="occ_nip" class="fw-semibold text-dark">-</span></small>
+            </div>
+          </div>
+          <hr class="my-2">
+          <div class="small">
+            <div class="row mb-1">
+              <div class="col-4 text-muted">Jabatan:</div>
+              <div class="col-8 fw-bold text-dark" id="occ_jabatan">-</div>
+            </div>
+            <div class="row mb-1">
+              <div class="col-4 text-muted">Unit Kerja:</div>
+              <div class="col-8 fw-semibold text-dark" id="occ_unit">-</div>
+            </div>
+            <div class="row mb-1">
+              <div class="col-4 text-muted">Nomor SK:</div>
+              <div class="col-8 text-dark" id="occ_nosk">-</div>
+            </div>
+            <div class="row">
+              <div class="col-4 text-muted">TMT Jabatan:</div>
+              <div class="col-8 text-dark" id="occ_tmt">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-warning border-0 small mb-0 py-2">
+          <i class="bx bx-info-circle me-1"></i> <strong>Solusi:</strong> Lakukan mutasi/pemberhentian pada pejabat aktif tersebut terlebih dahulu sebelum menginput pejabat baru.
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light justify-content-center border-0 py-3">
+        <button type="button" class="btn btn-danger px-4" data-bs-dismiss="modal">Saya Mengerti</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<!-- 2. JQUERY & SELECT2 JS -->
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // 1. Inisialisasi Select2 pada dropdown Pegawai, Jabatan, dan Unit Kerja
+    $('#id_pegawai, #id_jabatan, #id_unit_kerja').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: '-- Pilih / Cari --',
+        allowClear: true
+    });
+
+    // 2. Auto-fetch detail jenis & jenjang jabatan saat Select2 Jabatan berubah
+    $('#id_jabatan').on('change', function() {
+        const jabatanId = $(this).val();
+        const $infoJenis = $('#info_jenis_jabatan');
+
+        if (!jabatanId) {
+            $infoJenis.val('Otomatis terisi dari master');
+            return;
+        }
+
+        fetch(`/pegawai/api/jabatan/${jabatanId}/detail/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $infoJenis.val(`${data.data.jenis_nama} (${data.data.jenjang_nama})`);
+                }
+            })
+            .catch(err => console.error('Gagal mengambil data detail jabatan:', err));
+    });
+
+    // Panggil sekali di awal jika dalam mode edit (jabatan sudah terpilih)
+    if ($('#id_jabatan').val()) {
+        $('#id_jabatan').trigger('change');
+    }
+
+    // 3. Deteksi status terkunci dari Django non_field_errors
+    /* {% if form.non_field_errors %} */
+      /* {% for error in form.non_field_errors %} */
+        /* {% if "[OCCUPIED]" in error %} */
+          (function() {
+              let rawData = "{{ error|escapejs }}";
+              let parts = rawData.split('|');
+
+              if (parts.length >= 7) {
+                  $('#occ_nama').text(parts[1]);
+                  $('#occ_nip').text(parts[2]);
+                  $('#occ_jabatan').text(parts[3]);
+                  $('#occ_unit').text(parts[4]);
+                  $('#occ_nosk').text(parts[5]);
+                  $('#occ_tmt').text(parts[6]);
+
+                  var modalElement = document.getElementById('modalJabatanTerkunci');
+                  if (modalElement) {
+                      var modalTerkunci = new bootstrap.Modal(modalElement);
+                      modalTerkunci.show();
+                  }
+              }
+          })();
+        /* {% endif %} */
+      /* {% endfor %} */
+    /* {% endif %} */
+});
+</script>
+{% endblock %}

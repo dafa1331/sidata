@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}Master Unit Kerja{% endblock %}
+
+{% block content %}
+<!-- ALERT NOTIFIKASI -->
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom py-3">
+    <h5 class="mb-0 fw-bold">Master Data Unit Kerja</h5>
+    <div class="d-flex gap-2">
+      <!-- TOMBOL IMPORT -->
+      <a href="{% url 'unit_kerja_import' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bx bx-upload me-1"></i> Import
+      </a>
+
+      <!-- TOMBOL TAMBAH INDIVIDU -->
+      <a href="{% url 'unit_kerja_create' %}" class="btn btn-primary btn-sm">
+        <i class="bx bx-plus me-1"></i> Tambah Unit
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body border-bottom bg-light-subtle py-3">
+    <form method="get" class="row g-2">
+      <div class="col-md-10">
+        <input type="text" name="q" class="form-control form-control-sm" placeholder="Cari nama, jenis, kode, atau induk..." value="{{ query|default:'' }}">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary btn-sm w-100">Cari</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TABLE DENGAN FORMALISASI BARU -->
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 text-wrap">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 5%;" class="text-center">No</th>
+          <th style="width: 50%;">Unit Kerja & Hirarki</th>
+          <th style="width: 35%;">OPD Utama & Jenis</th>
+          <th style="width: 10%;" class="text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in unit_list %}
+        <tr>
+          <td class="text-center text-muted fw-semibold">{{ unit_list.start_index|add:forloop.counter0 }}</td>
+          
+          <!-- KOLOM 1: NAMA BOLD + HIRARKI TEGAS -->
+          <td>
+            <!-- NAMA UNIT KERJA (HITAM TEBAL) -->
+            <div class="fw-bold text-dark fs-6 mb-1">{{ item.nama }}</div>
+            
+            <!-- ALUR HIRARKI (TEKS GELAP / KONTRASTING) -->
+            {% if item.parent %}
+              <small class="d-flex align-items-center flex-wrap gap-1 text-dark" style="font-size: 0.78rem;">
+                <i class="bx bx-subdirectory-right text-primary me-1"></i>
+                <span class="fw-semibold text-body">{{ item.get_full_hierarchy }}</span>
+              </small>
+            {% else %}
+              <small class="text-primary fw-bold" style="font-size: 0.75rem;">
+                <i class="bx bx-check-circle me-1"></i>Unit Kerja Tingkat Utama
+              </small>
+            {% endif %}
+
+            <!-- KODE UNIT (TEKS JELAS) -->
+            {% if item.kode %}
+              <small class="text-dark d-block mt-1" style="font-size: 0.75rem;">
+                Kode: <code class="text-primary fw-bold">{{ item.kode }}</code>
+              </small>
+            {% endif %}
+          </td>
+
+          <!-- KOLOM 2: OPD TERTINGGI & BADGE JENIS -->
+          <td>
+            <!-- BADGE JENIS UNIT KERJA -->
+            <div class="mb-1">
+              {% if item.jenis %}
+                <span class="badge bg-dark text-white fw-bold" style="font-size: 0.7rem;">{{ item.get_jenis_display }}</span>
+              {% else %}
+                <span class="text-dark small fw-semibold">-</span>
+              {% endif %}
+            </div>
+
+            <!-- INDUK OPD TERTINGGI -->
+            <div>
+              {% if item.get_top_parent %}
+                <span class="badge bg-info text-dark border border-info-subtle fw-bold" style="font-size: 0.75rem;">
+                  <i class="bx bx-building-house me-1"></i>{{ item.get_top_parent.nama }}
+                </span>
+              {% else %}
+                <span class="badge bg-primary text-white fw-bold" style="font-size: 0.75rem;">
+                  <i class="bx bx-star me-1"></i>Top Level (Mandiri)
+                </span>
+              {% endif %}
+            </div>
+          </td>
+
+          <!-- AKSI -->
+          <td class="text-center">
+            <div class="d-flex justify-content-center gap-1">
+              <a href="{% url 'unit_kerja_update' item.pk %}" class="btn btn-icon btn-sm btn-outline-warning" title="Edit">
+                <i class="bx bx-edit-alt"></i>
+              </a>
+              <button type="button" 
+                      class="btn btn-icon btn-sm btn-outline-danger btn-delete" 
+                      title="Hapus"
+                      data-bs-toggle="modal" 
+                      data-bs-target="#deleteModal"
+                      data-url="{% url 'unit_kerja_delete' item.pk %}"
+                      data-nama="{{ item.nama }}"
+                      data-kode="{{ item.kode|default:'-' }}">
+                <i class="bx bx-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center py-4 text-muted">Belum ada data unit kerja.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINATION CONTAINER -->
+  {% if unit_list.has_other_pages %}
+  <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2 border-top py-2">
+    <small class="text-muted">
+      Menampilkan {{ unit_list.start_index }} - {{ unit_list.end_index }} dari {{ unit_list.paginator.count }} data
+    </small>
+    
+    <nav aria-label="Page navigation">
+      <ul class="pagination pagination-sm mb-0">
+        {% if unit_list.number > 1 %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}" title="Halaman Pertama">
+              <i class="tf-icon bx bx-double-left"></i>
+            </a>
+          </li>
+        {% endif %}
+
+        {% if unit_list.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ unit_list.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="tf-icon bx bx-chevron-left"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="tf-icon bx bx-chevron-left"></i></span></li>
+        {% endif %}
+
+        {% for num in unit_list.paginator.page_range %}
+          {% if unit_list.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > unit_list.number|add:'-3' and num < unit_list.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if unit_list.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ unit_list.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="tf-icon bx bx-chevron-right"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="tf-icon bx bx-chevron-right"></i></span></li>
+        {% endif %}
+
+        {% if unit_list.number < unit_list.paginator.num_pages %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ unit_list.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}" title="Halaman Terakhir">
+              <i class="tf-icon bx bx-double-right"></i>
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+
+<!-- MODAL KONFIRMASI HAPUS -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg overflow-hidden">
+      <div class="modal-header text-white py-3 px-4" style="background: linear-gradient(135deg, #ff4d4f, #ff3838) !important;">
+        <h5 class="modal-title text-white d-flex align-items-center fw-bold fs-6 mb-0">
+          <i class="bx bx-error-alt fs-4 me-2"></i> Konfirmasi Hapus Unit Kerja
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="deleteForm" method="post">
+        {% csrf_token %}
+        <div class="modal-body p-4 text-center">
+          <p class="text-muted small mb-3">Apakah Anda yakin ingin menghapus data unit kerja berikut?</p>
+
+          <div class="bg-light p-3 rounded border mb-3">
+            <h6 class="fw-bold text-dark mb-1" id="deleteUnitName">-</h6>
+            <small class="text-muted d-block">
+              Kode: <span id="deleteUnitKode" class="fw-semibold text-dark">-</span>
+            </small>
+          </div>
+
+          <div class="alert alert-warning border-0 small text-start d-flex align-items-start p-3 mb-0" style="background-color: #fff8e6; color: #d48806;">
+            <i class="bx bx-info-circle fs-5 me-2 flex-shrink-0 mt-1"></i>
+            <div>
+              <strong>Peringatan:</strong> Menghapus unit kerja ini dapat berdampak pada riwayat posisi pegawai atau sub-unit kerja yang terhubung secara hirarki.
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light justify-content-center border-0 py-3 gap-2">
+          <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-danger px-4 fw-semibold" style="background-color: #ff3838; border-color: #ff3838;">Ya, Hapus Permanen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteModal = document.getElementById('deleteModal');
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', function(event) {
+      const button = event.relatedTarget;
+      const url = button.getAttribute('data-url');
+      const nama = button.getAttribute('data-nama');
+      const kode = button.getAttribute('data-kode');
+
+      document.getElementById('deleteForm').setAttribute('action', url);
+      document.getElementById('deleteUnitName').textContent = nama;
+      document.getElementById('deleteUnitKode').textContent = kode;
+    });
+  }
+});
+</script>
+{% endblock %}

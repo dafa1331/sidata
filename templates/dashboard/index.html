@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<!-- HEADER & FILTER OPD -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+  <h4 class="mb-0">Dashboard Statistik ASN</h4>
+  
+  <form method="get" class="d-flex gap-2 align-items-center">
+    <select name="opd" class="form-select form-select-sm" style="min-width: 250px;" onchange="this.form.submit()">
+      <option value="">-- Semua OPD / Satuan Kerja --</option>
+      {% for unit in all_opd %}
+        <option value="{{ unit.id }}" {% if selected_opd == unit.id|stringformat:"s" %}selected{% endif %}>
+          {{ unit.nama }}
+        </option>
+      {% endfor %}
+    </select>
+    {% if selected_opd %}
+      <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- 1. KARTU RINGKASAN ASN -->
+<div class="row mb-4">
+  <div class="col-md-3 col-sm-6 mb-2">
+    <div class="card bg-primary text-white">
+      <div class="card-body p-3 text-center">
+        <h6 class="text-white-50 mb-1">TOTAL ASN</h6>
+        <h2 class="text-white mb-0 fw-bold">{{ stat_ringkasan.total_asn|default:0 }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-2">
+    <div class="card bg-success text-white">
+      <div class="card-body p-3 text-center">
+        <h6 class="text-white-50 mb-1">PNS / CPNS</h6>
+        <h2 class="text-white mb-0 fw-bold">{{ stat_ringkasan.pns|default:0 }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-2">
+    <div class="card bg-warning text-white">
+      <div class="card-body p-3 text-center">
+        <h6 class="text-white-50 mb-1">PPPK</h6>
+        <h2 class="text-white mb-0 fw-bold">{{ stat_ringkasan.pppk|default:0 }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6 mb-2">
+    <div class="card bg-info text-white">
+      <div class="card-body p-3 text-center">
+        <h6 class="text-white-50 mb-1">PPPK PARUH WAKTU</h6>
+        <h2 class="text-white mb-0 fw-bold">{{ stat_ringkasan.pppk_pw|default:0 }}</h2>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. STATISTIK JABATAN & DOUGHNUT CHART GENDER -->
+<div class="row mb-4">
+  <!-- STATISTIK JABATAN (L/P) -->
+  <div class="col-md-8 mb-3">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="mb-0">Statistik Jenis Jabatan (Laki-Laki & Perempuan)</h5></div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Jenis Jabatan</th>
+              <th class="text-center text-primary">Laki-Laki</th>
+              <th class="text-center text-danger">Perempuan</th>
+              <th class="text-center">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Struktural</strong></td>
+              <td class="text-center">{{ stat_jabatan.struktural_l|default:0 }}</td>
+              <td class="text-center">{{ stat_jabatan.struktural_p|default:0 }}</td>
+              <td class="text-center fw-bold">{{ stat_jabatan.struktural_l|add:stat_jabatan.struktural_p }}</td>
+            </tr>
+            <tr>
+              <td><strong>Fungsional</strong></td>
+              <td class="text-center">{{ stat_jabatan.fungsional_l|default:0 }}</td>
+              <td class="text-center">{{ stat_jabatan.fungsional_p|default:0 }}</td>
+              <td class="text-center fw-bold">{{ stat_jabatan.fungsional_l|add:stat_jabatan.fungsional_p }}</td>
+            </tr>
+            <tr>
+              <td><strong>Pelaksana</strong></td>
+              <td class="text-center">{{ stat_jabatan.pelaksana_l|default:0 }}</td>
+              <td class="text-center">{{ stat_jabatan.pelaksana_p|default:0 }}</td>
+              <td class="text-center fw-bold">{{ stat_jabatan.pelaksana_l|add:stat_jabatan.pelaksana_p }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART PRESENTASE GENDER -->
+  <div class="col-md-4 mb-3">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="mb-0">Persentase Gender</h5></div>
+      <div class="card-body d-flex justify-content-center align-items-center">
+        <canvas id="genderChart" style="max-height: 220px;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. STATISTIK GOLONGAN (I - IV) -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header"><h5 class="mb-0">Statistik Golongan Pangkat</h5></div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-3 col-6 border-end">
+            <h6 class="text-muted mb-1">Golongan I</h6>
+            <h3 class="fw-bold text-secondary mb-0">{{ stat_golongan.gol_1|default:0 }}</h3>
+          </div>
+          <div class="col-md-3 col-6 border-end">
+            <h6 class="text-muted mb-1">Golongan II</h6>
+            <h3 class="fw-bold text-info mb-0">{{ stat_golongan.gol_2|default:0 }}</h3>
+          </div>
+          <div class="col-md-3 col-6 border-end">
+            <h6 class="text-muted mb-1">Golongan III</h6>
+            <h3 class="fw-bold text-primary mb-0">{{ stat_golongan.gol_3|default:0 }}</h3>
+          </div>
+          <div class="col-md-3 col-6">
+            <h6 class="text-muted mb-1">Golongan IV</h6>
+            <h3 class="fw-bold text-danger mb-0">{{ stat_golongan.gol_4|default:0 }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. TABEL REKAPITULASI OPD INDUK -->
+<div class="card">
+  <div class="card-header"><h5 class="mb-0">Jumlah Pegawai Per OPD / Satuan Kerja</h5></div>
+  <div class="table-responsive text-nowrap">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th style="width: 5%;">No</th>
+          <th>Nama OPD / Satuan Kerja</th>
+          <th class="text-center">PNS</th>
+          <th class="text-center">PPPK</th>
+          <th class="text-center">PPPK PW</th>
+          <th class="text-center">Total Pegawai</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for opd in page_obj %}
+        <tr>
+          <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+          <td><strong>{{ opd.nama }}</strong></td>
+          <td class="text-center"><span class="badge bg-label-success">{{ opd.total_pns }}</span></td>
+          <td class="text-center"><span class="badge bg-label-warning">{{ opd.total_pppk }}</span></td>
+          <td class="text-center"><span class="badge bg-label-info">{{ opd.total_pppk_pw }}</span></td>
+          <td class="text-center fw-bold"><span class="badge bg-primary fs-6">{{ opd.total_pegawai }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center py-4 text-muted">Data OPD belum tersedia.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PAGINASI TABEL OPD -->
+  {% if page_obj.has_other_pages %}
+  <div class="card-footer d-flex justify-content-end">
+    <ul class="pagination mb-0">
+      {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_opd %}&opd={{ selected_opd }}{% endif %}">«</a></li>
+      {% endif %}
+      
+      {% for i in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+          <a class="page-link" href="?page={{ i }}{% if selected_opd %}&opd={{ selected_opd }}{% endif %}">{{ i }}</a>
+        </li>
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_opd %}&opd={{ selected_opd }}{% endif %}">»</a></li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+<!-- SCRIPT CHART.JS PERSENTASE GENDER -->
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById('genderChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Laki-Laki', 'Perempuan'],
+            datasets: [{
+                data: [
+                    parseInt("{{ stat_ringkasan.total_l|default:'0' }}"), 
+                    parseInt("{{ stat_ringkasan.total_p|default:'0' }}")
+                ],
+                backgroundColor: ['#696cff', '#ff3e1d'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

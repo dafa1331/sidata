@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold"><i class="bx bx-calendar-event me-2 text-primary"></i> Ringkasan Proyeksi Per Tahun</h5>
+      </div>
+      <div class="card-body py-3">
+        <!-- AGREGASI PER TAHUN (KARTU NAVIGASI) -->
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'proyeksi_pensiun' %}" class="btn btn-outline-secondary {% if not tahun_selected %}active{% endif %}">
+            Semua Tahun
+          </a>
+          {% for r in rekap_tahun %}
+            <a href="?tahun={{ r.tahun }}" class="btn btn-outline-primary position-relative {% if tahun_selected == r.tahun|stringformat:'s' %}active{% endif %}">
+              Tahun {{ r.tahun }}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ r.jumlah }}
+              </span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER BULAN (JIKA TAHUN DIPILIH) -->
+{% if tahun_selected %}
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="btn-group btn-group-sm" role="group">
+      <a href="?tahun={{ tahun_selected }}" class="btn btn-outline-dark {% if not bulan_selected %}active{% endif %}">Semua Bulan</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=1" class="btn btn-outline-dark {% if bulan_selected == '1' %}active{% endif %}">Jan</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=2" class="btn btn-outline-dark {% if bulan_selected == '2' %}active{% endif %}">Feb</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=3" class="btn btn-outline-dark {% if bulan_selected == '3' %}active{% endif %}">Mar</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=4" class="btn btn-outline-dark {% if bulan_selected == '4' %}active{% endif %}">Apr</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=5" class="btn btn-outline-dark {% if bulan_selected == '5' %}active{% endif %}">Mei</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=6" class="btn btn-outline-dark {% if bulan_selected == '6' %}active{% endif %}">Jun</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=7" class="btn btn-outline-dark {% if bulan_selected == '7' %}active{% endif %}">Jul</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=8" class="btn btn-outline-dark {% if bulan_selected == '8' %}active{% endif %}">Agu</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=9" class="btn btn-outline-dark {% if bulan_selected == '9' %}active{% endif %}">Sep</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=10" class="btn btn-outline-dark {% if bulan_selected == '10' %}active{% endif %}">Okt</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=11" class="btn btn-outline-dark {% if bulan_selected == '11' %}active{% endif %}">Nov</a>
+      <a href="?tahun={{ tahun_selected }}&bulan=12" class="btn btn-outline-dark {% if bulan_selected == '12' %}active{% endif %}">Des</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- TABEL DETAIL PROYEKSI -->
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center py-3">
+    <h5 class="mb-0 fw-bold">Daftar Pegawai Memasuki BUP</h5>
+    <span class="badge bg-primary fs-6">Total: {{ detail_proyeksi|length }} Pegawai</span>
+  </div>
+  <div class="table-responsive text-nowrap">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>NIP & Nama Pegawai</th>
+          <th>Jabatan Terakhir</th>
+          <th>Usia BUP</th>
+          <th>TMT Pensiun</th>
+          <th class="text-center">Aksi / Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in detail_proyeksi %}
+        <tr class="{% if d.is_ready %}table-warning{% endif %}">
+          <td>{{ forloop.counter }}</td>
+          <td>
+            <strong>{{ d.pegawai.nama_dengan_gelar }}</strong>
+            <small class="d-block text-muted">NIP. {{ d.pegawai.nip }}</small>
+          </td>
+          <td>
+            {% if d.jabatan %}
+              {{ d.jabatan.jabatan.nama_jabatan }}
+              <small class="d-block text-muted">{{ d.jabatan.unit_kerja }}</small>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td><span class="badge bg-label-info">{{ d.usia_bup }} Tahun</span></td>
+          <td>
+            <strong class="text-danger">{{ d.tmt_pensiun|date:"d F Y" }}</strong>
+          </td>
+          <td class="text-center">
+            {% if d.is_ready %}
+              <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#modalPensiun{{ d.pegawai.pk }}">
+                <i class="bx bx-file me-1"></i> Input SK Pensiun
+              </button>
+            {% else %}
+              <span class="badge bg-label-secondary">Belum Waktunya</span>
+            {% endif %}
+          </td>
+        </tr>
+
+        <!-- MODAL INPUT SK PENSIUN -->
+        <div class="modal fade" id="modalPensiun{{ d.pegawai.pk }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title text-white"><i class="bx bx-user-x me-1"></i> Penetapan SK Pensiun</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form action="{% url 'eksekusi_pensiun' d.pegawai.pk %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body py-3 text-start">
+                  <p class="mb-3">Proses perubahan status pegawai menjadi <strong>PENSIUN</strong> untuk:</p>
+                  <div class="p-2 bg-light rounded mb-3 border">
+                    <strong class="d-block">{{ d.pegawai.nama_dengan_gelar }}</strong>
+                    <small>NIP: {{ d.pegawai.nip }} | TMT Pensiun: {{ d.tmt_pensiun|date:"d M Y" }}</small>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Nomor SK Pensiun <span class="text-danger">*</span></label>
+                    <input type="text" name="nomor_sk" class="form-control" required placeholder="Contoh: 00012/23212/AZ/05/26">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Tanggal SK <span class="text-danger">*</span></label>
+                    <input type="date" name="tanggal_sk" class="form-control" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Pejabat Penetap</label>
+                    <input type="text" name="pejabat_penetap" class="form-control" placeholder="Contoh: Kepala BKN / Bupati">
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                  <button type="submit" class="btn btn-danger">Simpan & Set Pensiun</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">Tidak ada proyeksi pensiun pada periode ini.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Master Pangkat{% endblock %}
+
+{% block content %}
+<!-- Alert Message -->
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="card">
+  <!-- Header -->
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h5 class="mb-0">Master Data Pangkat / Golongan</h5>
+    <a href="{% url 'pangkat_create' %}" class="btn btn-primary btn-sm">
+      <i class="bx bx-plus me-1"></i> Tambah Pangkat
+    </a>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="card-body border-bottom">
+    <form method="get" class="row g-2">
+      <div class="col-md-10">
+        <input type="text" name="q" class="form-control" placeholder="Cari golongan atau nama pangkat..." value="{{ query }}">
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-outline-primary w-100">Cari</button>
+        {% if query %}
+          <a href="{% url 'pangkat_list' %}" class="btn btn-outline-secondary" title="Reset">
+            <i class="bx bx-refresh"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabel Data -->
+  <div class="table-responsive text-nowrap">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Urutan Hirarki</th>
+          <th>Golongan / Ruang</th>
+          <th>Nama Pangkat</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pangkat_list %}
+        <tr>
+          <td>{{ pangkat_list.start_index|add:forloop.counter0 }}</td>
+          <td>{{ item.urutan }}</td>
+          <td><span class="badge bg-label-primary">{{ item.golongan }}</span></td>
+          <td><strong>{{ item.nama_pangkat }}</strong></td>
+          <td>
+            {% if item.is_active %}
+              <span class="badge bg-label-success">Aktif</span>
+            {% else %}
+              <span class="badge bg-label-danger">Non-Aktif</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{% url 'pangkat_update' item.pk %}" class="btn btn-sm btn-outline-warning">
+              <i class="bx bx-edit-alt"></i>
+            </a>
+            <a href="{% url 'pangkat_delete' item.pk %}" class="btn btn-sm btn-outline-danger">
+              <i class="bx bx-trash"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center py-4">Data pangkat tidak ditemukan.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Component -->
+  {% if pangkat_list.has_other_pages %}
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <small class="text-muted">
+      Menampilkan {{ pangkat_list.start_index }} - {{ pangkat_list.end_index }} dari {{ pangkat_list.paginator.count }} data
+    </small>
+    
+    <nav aria-label="Page navigation">
+      <ul class="pagination pagination-sm mb-0">
+        {% if pangkat_list.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pangkat_list.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="tf-icon bx bx-chevron-left"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="tf-icon bx bx-chevron-left"></i></span></li>
+        {% endif %}
+
+        {% for num in pangkat_list.paginator.page_range %}
+          {% if pangkat_list.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > pangkat_list.number|add:'-3' and num < pangkat_list.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if pangkat_list.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pangkat_list.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+              <i class="tf-icon bx bx-chevron-right"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="tf-icon bx bx-chevron-right"></i></span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

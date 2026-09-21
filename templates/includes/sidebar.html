@@ -1,0 +1,214 @@
+       <!-- Menu -->
+
+        <!-- Menu Sidebar SI-Data ASN -->
+<!-- Menu Sidebar SI-Data ASN -->
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+  <!-- Brand / Logo -->
+  <div class="app-brand demo">
+    <a href="{% url 'dashboard' %}" class="app-brand-link">
+      <span class="app-brand-logo demo">
+        {% load static %}
+        <img src="{% static 'sneat/img/favicon/logo.png' %}" alt="Logo SI-Data ASN" style="height: 28px; width: auto;" />
+      </span>
+      <span class="app-brand-text demo menu-text fw-bolder ms-2">SI-Data ASN</span>
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+      <i class="bx bx-chevron-left bx-sm align-middle"></i>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  <ul class="menu-inner py-1">
+    <!-- ================================================= -->
+    <!-- 1. UTAMA & PEGAWAI (Akses Semua User)             -->
+    <!-- ================================================= -->
+    <li class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <a href="{% url 'dashboard' %}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-home-circle"></i>
+        <div>Dashboard</div>
+      </a>
+    </li>
+
+    <li class="menu-item {% if 'pegawai' in request.resolver_match.url_name and 'import' not in request.resolver_match.url_name and 'entry' not in request.resolver_match.url_name %}active{% endif %}">
+      <a href="{% url 'pegawai_list' %}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-user-pin"></i>
+        <div>Data Pegawai</div>
+      </a>
+    </li>
+
+    <!-- ================================================= -->
+    <!-- 2. LAYANAN BIDANG KERJA (Sesuai Role / Superadmin) -->
+    <!-- ================================================= -->
+    
+    <!-- LAYANAN BIDANG JABATAN -->
+    {% if user.is_superuser or "Admin Jabatan" in user.groups.all|stringformat:"s" %}
+    <!-- <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Bidang Jabatan</span>
+    </li> -->
+    <li class="menu-item {% if 'jabatan' in request.resolver_match.url_name or 'pelantikan' in request.resolver_match.url_name %}active open{% endif %}">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-briefcase"></i>
+        <div>Layanan Jabatan</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item {% if request.resolver_match.url_name == 'riwayat_jabatan_entry' %}active{% endif %}">
+          <a href="{% url 'riwayat_jabatan_entry' %}" class="menu-link">
+            <div>Input SK Jabatan</div>
+          </a>
+        </li>
+        <li class="menu-item {% if request.resolver_match.url_name == 'pelantikan_massal' %}active{% endif %}">
+          <a href="{% url 'pelantikan_massal' %}" class="menu-link">
+            <div>Pelantikan Massal</div>
+          </a>
+        </li>
+        <li class="menu-item {% if request.resolver_match.url_name == 'riwayat_jabatan_import' %}active{% endif %}">
+          <a href="{% url 'riwayat_jabatan_import' %}" class="menu-link">
+            <div>Import SK Jabatan</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+    {% endif %}
+
+    <!-- LAYANAN BIDANG PANGKAT -->
+    {% if user.is_superuser or "Admin Pangkat" in user.groups.all|stringformat:"s" %}
+    <!-- <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Bidang Pangkat</span>
+    </li> -->
+    <li class="menu-item {% if 'pangkat' in request.resolver_match.url_name %}active open{% endif %}">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-award"></i>
+        <div>Layanan Pangkat</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item {% if request.resolver_match.url_name == 'riwayat_pangkat_entry' %}active{% endif %}">
+          <a href="{% url 'riwayat_pangkat_entry' %}" class="menu-link">
+            <div>Input SK Pangkat</div>
+          </a>
+        </li>
+        <li class="menu-item {% if request.resolver_match.url_name == 'riwayat_pangkat_import' %}active{% endif %}">
+          <a href="{% url 'riwayat_pangkat_import' %}" class="menu-link">
+            <div>Import SK Pangkat</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+    {% endif %}
+
+    <!-- LAYANAN BIDANG PENDIDIKAN -->
+    {% if user.is_superuser or "Admin Pendidikan" in user.groups.all|stringformat:"s" %}
+    <!-- <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Bidang Pendidikan</span>
+    </li> -->
+    <li class="menu-item {% if 'pendidikan' in request.resolver_match.url_name %}active open{% endif %}">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-book-open"></i>
+        <div>Layanan Pendidikan</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item {% if request.resolver_match.url_name == 'riwayat_pendidikan_entry' %}active{% endif %}">
+          <a href="{% url 'riwayat_pendidikan_entry' %}" class="menu-link">
+            <div>Input Data Pendidikan</div>
+          </a>
+        </li>
+        <li class="menu-item {% if request.resolver_match.url_name == 'riwayat_pendidikan_import' %}active{% endif %}">
+          <a href="{% url 'riwayat_pendidikan_import' %}" class="menu-link">
+            <div>Import Data Pendidikan</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+    {% endif %}
+
+    <!-- ================================================= -->
+    <!-- 3. MASTER DATA (Pengaturan Master per Bidang)    -->
+    <!-- ================================================= -->
+     {% if user.is_superuser %}
+    <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Master Data</span>
+    </li>
+    
+    <li class="menu-item {% if 'jabatan_list' in request.resolver_match.url_name or 'unit_kerja' in request.resolver_match.url_name or 'pangkat_list' in request.resolver_match.url_name or 'tingkat_pendidikan' in request.resolver_match.url_name %}active open{% endif %}">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-data"></i>
+        <div>Master Data</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item {% if request.resolver_match.url_name == 'jabatan_list' %}active{% endif %}">
+          <a href="{% url 'jabatan_list' %}" class="menu-link">
+            <div>Master Jabatan</div>
+          </a>
+        </li>
+        <li class="menu-item {% if request.resolver_match.url_name == 'unit_kerja_list' %}active{% endif %}">
+          <a href="{% url 'unit_kerja_list' %}" class="menu-link">
+            <div>Master Unit Kerja</div>
+          </a>
+        </li>
+
+        <li class="menu-item {% if request.resolver_match.url_name == 'pangkat_list' %}active{% endif %}">
+          <a href="{% url 'pangkat_list' %}" class="menu-link">
+            <div>Master Pangkat / Gol.</div>
+          </a>
+        </li>
+
+        <li class="menu-item {% if request.resolver_match.url_name == 'tingkat_pendidikan_list' %}active{% endif %}">
+          <a href="{% url 'tingkat_pendidikan_list' %}" class="menu-link">
+            <div>Master Pendidikan</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- KELOMPOK MENU MONITORED / KEPEGAWAIAN -->
+    <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Monitoring & Analisis</span>
+    </li>
+
+    <!-- MENU PROYEKSI PENSIUN -->
+    <li class="menu-item {% if request.resolver_match.url_name == 'proyeksi_pensiun' %}active{% endif %}">
+      <a href="{% url 'proyeksi_pensiun' %}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-time-five text-danger"></i>
+        <div data-i18n="Proyeksi Pensiun">Proyeksi Pensiun</div>
+        
+        <!-- OPSIONAL: BADGE NOTIFIKASI JIKA ADA YANG SIAP PENSIUN (PAKAI CONTEXT PROCESSOR / TEMPLATE TAG) -->
+        {% if jumlah_siap_pensiun > 0 %}
+          <span class="badge badge-center rounded-pill bg-danger ms-auto fs-tiny">{{ jumlah_siap_pensiun }}</span>
+        {% endif %}
+      </a>
+    </li>
+
+    <li class="menu-item {% if request.resolver_match.url_name == 'proyeksi_habis_kontrak' %}active{% endif %}">
+      <a href="{% url 'proyeksi_habis_kontrak' %}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-alarm-exclamation text-warning"></i>
+        <div data-i18n="Proyeksi Kontrak">Proyeksi Habis Kontrak</div>
+      </a>
+    </li>
+
+    <li class="menu-item">
+      <a href="{% url 'laporan_kepegawaian' %}" class="menu-link">
+        <i class="menu-icon tf-icons bx bx-file"></i>
+        <div>Laporan Kepegawaian</div>
+      </a>
+    </li>
+
+    <!-- KHUSUS SUPERADMIN: MANAJEMEN AKUN OPERATOR -->
+    
+      <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Pengaturan Sistem</span>
+      </li>
+
+      <li class="menu-item {% if 'users' in request.resolver_match.url_name %}active{% endif %}">
+        <a href="{% url 'user_list' %}" class="menu-link">
+          <i class="menu-icon tf-icons bx bx-user-voice"></i>
+          <div>Manajemen Akun</div>
+        </a>
+      </li>
+    {% endif %}
+
+  </ul>
+</aside>
+<!-- / Menu -->
+<!-- / Menu -->
+        <!-- / Menu -->

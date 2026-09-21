@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ title }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Pilihan Pangkat / Golongan</label>
+              {{ form.pangkat }}
+              {% if form.pangkat.errors %}<div class="text-danger small mt-1">{{ form.pangkat.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Jenis Kenaikan Pangkat</label>
+              {{ form.jenis_kp }}
+              {% if form.jenis_kp.errors %}<div class="text-danger small mt-1">{{ form.jenis_kp.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">TMT Pangkat</label>
+              {{ form.tmt_pangkat }}
+              {% if form.tmt_pangkat.errors %}<div class="text-danger small mt-1">{{ form.tmt_pangkat.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tanggal SK</label>
+              {{ form.tanggal_sk }}
+              {% if form.tanggal_sk.errors %}<div class="text-danger small mt-1">{{ form.tanggal_sk.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nomor SK Pangkat</label>
+              {{ form.nomor_sk }}
+              {% if form.nomor_sk.errors %}<div class="text-danger small mt-1">{{ form.nomor_sk.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Pejabat Penetap SK</label>
+              {{ form.pejabat_penetap }}
+              {% if form.pejabat_penetap.errors %}<div class="text-danger small mt-1">{{ form.pejabat_penetap.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Upload Berkas SK Pangkat (PDF)</label>
+            {{ form.file_sk }}
+            {% if form.file_sk.errors %}<div class="text-danger small mt-1">{{ form.file_sk.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary me-2">Simpan Riwayat Pangkat</button>
+            <a href="{% url 'pegawai_detail' pegawai.pk %}?tab=pangkat" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

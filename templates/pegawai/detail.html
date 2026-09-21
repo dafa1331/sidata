@@ -1,0 +1,587 @@
+{% extends 'base.html' %}
+
+{% block title %}Detail Pegawai - {{ pegawai.nama_lengkap }}{% endblock %}
+
+{% block content %}
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Header Identitas Pegawai -->
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h4 class="mb-1 fw-bold">{{ pegawai.nama_dengan_gelar }}</h4>
+        <p class="text-muted mb-0">
+          NIP: <strong>{{ pegawai.nip }}</strong> | TTL: {{ pegawai.tempat_lahir }}, {{ pegawai.tanggal_lahir|date:"d M Y" }} | Agama: {{ pegawai.get_agama_display }}
+        </p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        {% if pegawai.status_keaktifan == 'AKTIF' %}
+          <span class="badge bg-label-success fs-6">Status: AKTIF</span>
+        {% elif pegawai.status_keaktifan == 'PPPK_PW' %}
+          <span class="badge bg-label-info fs-6">Status: PPPK PARUH WAKTU</span>
+        {% elif pegawai.status_keaktifan == 'PENSIUN' %}
+          <span class="badge bg-label-secondary fs-6">Status: PENSIUN</span>
+        {% else %}
+          <span class="badge bg-label-primary fs-6">Status: {{ pegawai.get_status_keaktifan_display }}</span>
+        {% endif %}
+
+        <a href="{% url 'pegawai_update' pegawai.pk %}" class="btn btn-warning btn-sm ms-2">
+          <i class="bx bx-edit-alt me-1"></i> Edit Identitas
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CARDS RINGKASAN DATA TERAKHIR -->
+<div class="row mb-4">
+  <!-- Card Jabatan Terakhir -->
+  <div class="col-md-4 mb-2">
+    <div class="card bg-label-primary border-0 h-100 shadow-sm">
+      <div class="card-body p-3">
+        <div class="d-flex align-items-center mb-2">
+          <i class="bx bx-briefcase fs-3 me-2 text-primary"></i>
+          <h6 class="mb-0 text-primary fw-bold">Jabatan Terakhir</h6>
+        </div>
+        {% if pegawai.jabatan_terakhir %}
+          <p class="mb-0 fw-bold text-dark">
+            {{ pegawai.jabatan_terakhir.jabatan.nama_jabatan }}
+            {% if j.status_pelantikan == 'BELUM_DILANTIK' and j.jabatan.jenis.nama|lower == 'fungsional' %}
+              <!-- KHUSUS CPNS PADA JABATAN FUNGSIONAL -->
+              <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">
+                <i class="bx bx-time-five me-1"></i>Tugas Pelaksana (CPNS)
+              </span>
+            {% elif j.jabatan.jenjang %}
+              <!-- UNTUK JF DEFINITIF / SUDAH DILANTIK -->
+              <span class="text-primary fw-bold"> - {{ j.jabatan.jenjang.nama }}</span>
+            {% endif %}
+          </p>
+          <small class="text-muted d-block">{{ pegawai.jabatan_terakhir.unit_kerja }}</small>
+          <small class="badge bg-primary mt-1">TMT: {{ pegawai.jabatan_terakhir.tmt_jabatan|date:"d M Y" }}</small>
+        {% else %}
+          <span class="text-muted small">Belum diinput</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Pangkat Terakhir -->
+  <div class="col-md-4 mb-2">
+    <div class="card bg-label-info border-0 h-100 shadow-sm">
+      <div class="card-body p-3">
+        <div class="d-flex align-items-center mb-2">
+          <i class="bx bx-award fs-3 me-2 text-info"></i>
+          <h6 class="mb-0 text-info fw-bold">Pangkat / Golongan</h6>
+        </div>
+        {% if pegawai.pangkat_terakhir %}
+          <p class="mb-0 fw-bold text-dark">{{ pegawai.pangkat_terakhir.pangkat.nama_pangkat }} ({{ pegawai.pangkat_terakhir.pangkat.golongan }})</p>
+          <small class="badge bg-info mt-1">TMT: {{ pegawai.pangkat_terakhir.tmt_pangkat|date:"d M Y" }}</small>
+        {% else %}
+          <span class="text-muted small">Belum diinput</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Pendidikan Terakhir -->
+  <div class="col-md-4 mb-2">
+    <div class="card bg-label-success border-0 h-100 shadow-sm">
+      <div class="card-body p-3">
+        <div class="d-flex align-items-center mb-2">
+          <i class="bx bx-book-open fs-3 me-2 text-success"></i>
+          <h6 class="mb-0 text-success fw-bold">Pendidikan Terakhir</h6>
+        </div>
+        {% if pegawai.pendidikan_terakhir %}
+          <p class="mb-0 fw-bold text-dark">{{ pegawai.pendidikan_terakhir.tingkat.kode }} - {{ pegawai.pendidikan_terakhir.nama_sekolah }}</p>
+          <small class="text-muted d-block">{{ pegawai.pendidikan_terakhir.jurusan|default:"-" }} (Lulus {{ pegawai.pendidikan_terakhir.tahun_lulus }})</small>
+        {% else %}
+          <span class="text-muted small">Belum diinput</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Navigasi Tab Bootstrap -->
+<ul class="nav nav-pills flex-column flex-md-row mb-3" id="pills-tab" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="pills-kepegawaian-tab" data-bs-toggle="pill" data-bs-target="#pills-kepegawaian" type="button" role="tab" aria-controls="pills-kepegawaian" aria-selected="true">
+      <i class="bx bx-file me-1"></i> R. Kepegawaian
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-jabatan-tab" data-bs-toggle="pill" data-bs-target="#pills-jabatan" type="button" role="tab" aria-controls="pills-jabatan" aria-selected="false">
+      <i class="bx bx-briefcase me-1"></i> R. Jabatan
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-pangkat-tab" data-bs-toggle="pill" data-bs-target="#pills-pangkat" type="button" role="tab" aria-controls="pills-pangkat" aria-selected="false">
+      <i class="bx bx-award me-1"></i> R. Pangkat
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-pendidikan-tab" data-bs-toggle="pill" data-bs-target="#pills-pendidikan" type="button" role="tab" aria-controls="pills-pendidikan" aria-selected="false">
+      <i class="bx bx-book-open me-1"></i> R. Pendidikan
+    </button>
+  </li>
+</ul>
+
+<!-- KONTEN TAB BOOTSTRAP -->
+<div class="tab-content p-0" id="pills-tabContent">
+
+<!-- TAB 1: RIWAYAT KEPEGAWAIAN -->
+<div class="tab-pane fade show active" id="pills-kepegawaian" role="tabpanel" aria-labelledby="pills-kepegawaian-tab">
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0 fw-bold">Riwayat Status Kepegawaian & SK</h5>
+      <a href="{% url 'riwayat_kepegawaian_create' pegawai.pk %}" class="btn btn-primary btn-sm">
+        <i class="bx bx-plus me-1"></i> Tambah SK / Mutasi / Pensiun
+      </a>
+    </div>
+    <div class="table-responsive text-nowrap">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Jenis Transaksi / SK</th>
+            <th>TMT SK (Mulai)</th>
+            <th>Akhir Kontrak</th>
+            <th>Nomor SK</th>
+            <th>Tanggal SK</th>
+            <th>Status Kontrak</th>
+            <th>Berkas File</th>
+            <th class="text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in riwayat_kepegawaian_list %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><strong>{{ r.get_jenis_transaksi_display }}</strong></td>
+            <td><span class="badge bg-label-info">{{ r.tmt|date:"d M Y" }}</span></td>
+            
+            <!-- KOLOM AKHIR KONTRAK (TMT SELESAI) -->
+            <td>
+              {% if r.tmt_selesai %}
+                <span class="badge bg-label-warning">{{ r.tmt_selesai|date:"d M Y" }}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+
+            <td>{{ r.nomor_sk }}</td>
+            <td>{{ r.tanggal_sk|date:"d M Y" }}</td>
+            
+            <!-- KOLOM STATUS MASA BERLAKU KONTRAK -->
+            <td>
+              {% if r.tmt_selesai %}
+                {% if r.is_kontrak_aktif %}
+                  <span class="badge bg-success" title="Sisa {{ r.sisa_hari_kontrak }} Hari">
+                    <i class="bx bx-check-circle me-1"></i> Aktif ({{ r.sisa_hari_kontrak }} hr)
+                  </span>
+                {% else %}
+                  <span class="badge bg-danger">
+                    <i class="bx bx-x-circle me-1"></i> Berakhir
+                  </span>
+                {% endif %}
+              {% else %}
+                <span class="badge bg-label-secondary">Tetap / Non-Kontrak</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if r.file_sk %}
+                <a href="{{ r.file_sk.url }}" target="_blank" class="btn btn-xs btn-outline-primary">
+                  <i class="bx bx-download me-1"></i> Lihat SK
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <a href="{% url 'riwayat_kepegawaian_update' r.pk %}" class="btn btn-sm btn-outline-warning" title="Edit SK">
+                <i class="bx bx-edit-alt"></i>
+              </a>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapusRiwayat{{ r.pk }}" title="Hapus SK">
+                <i class="bx bx-trash"></i>
+              </button>
+            </td>
+          </tr>
+
+          <!-- MODAL HAPUS KEPEGAWAIAN -->
+          <div class="modal fade" id="modalHapusRiwayat{{ r.pk }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header bg-danger">
+                  <h5 class="modal-title text-white"><i class="bx bx-error me-1"></i> Konfirmasi Hapus Riwayat</h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'riwayat_kepegawaian_delete' r.pk %}" method="post">
+                  {% csrf_token %}
+                  <div class="modal-body text-center py-4">
+                    <p class="mb-2">Apakah Anda yakin ingin menghapus riwayat <strong>{{ r.get_jenis_transaksi_display }}</strong>?</p>
+                    <p class="text-muted small mb-0">Nomor SK: {{ r.nomor_sk }}</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <tr><td colspan="9" class="text-center py-4 text-muted">Belum ada riwayat kepegawaian.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+  <!-- TAB 2: RIWAYAT JABATAN -->
+  <div class="tab-pane fade" id="pills-jabatan" role="tabpanel" aria-labelledby="pills-jabatan-tab">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0 fw-bold">Riwayat Jabatan & Unit Kerja</h5>
+        <a href="{% url 'riwayat_jabatan_create' pegawai.pk %}" class="btn btn-primary btn-sm">
+          <i class="bx bx-plus me-1"></i> Tambah SK Jabatan
+        </a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th style="width: 5%;">No</th>
+              <th style="width: 25%;">Nama Jabatan</th>
+              <th style="width: 20%;">Jenis / Jenjang / Status</th>
+              <th style="width: 20%;">Unit Kerja</th>
+              <th style="width: 10%;">TMT Jabatan</th>
+              <th style="width: 10%;">Nomor SK</th>
+              <th style="width: 5%;">File</th>
+              <th style="width: 5%;" class="text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for j in riwayat_jabatan_list %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td class="text-wrap">
+                <strong class="text-dark">{{ j.jabatan.nama_jabatan }}</strong>
+                {% if j.status_pelantikan == 'BELUM_DILANTIK' %}
+                  <small class="text-warning fw-semibold d-block mt-1">
+                    <i class="bx bx-time-five me-1"></i>Tugas Pelaksana (CPNS)
+                  </small>
+                {% elif j.jabatan.jenjang %}
+                  <small class="fw-bold text-primary d-block mt-1">
+                    <i class="bx bx-chevron-right"></i> {{ j.jabatan.jenjang.nama }}
+                  </small>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge bg-label-primary mb-1">{{ j.jabatan.jenis.nama }}</span>
+                
+                <!-- EVALUASI STATUS PELANTIKAN -->
+                {% if j.status_pelantikan == 'BELUM_DILANTIK' %}
+                  <span class="badge bg-warning text-dark d-inline-block">Tugas Pelaksana</span>
+                {% else %}
+                  {% if j.jabatan.jenjang %}
+                    <span class="badge bg-label-info d-inline-block">{{ j.jabatan.jenjang.nama }}</span>
+                  {% endif %}
+                {% endif %}
+
+                {% if j.jabatan.eselon %}
+                  <span class="badge bg-label-warning ms-1">Eselon {{ j.jabatan.eselon }}</span>
+                {% endif %}
+              </td>
+              <td class="text-wrap" style="max-width: 250px;">
+                <small class="fw-semibold text-dark">{{ j.unit_kerja }}</small>
+              </td>
+              <td><span class="badge bg-label-info">{{ j.tmt_jabatan|date:"d M Y" }}</span></td>
+              <td class="text-wrap"><small>{{ j.nomor_sk }}</small></td>
+              <td>
+                {% if j.file_sk %}
+                  <a href="{{ j.file_sk.url }}" target="_blank" class="btn btn-xs btn-outline-primary" title="Lihat SK">
+                    <i class="bx bx-download"></i>
+                  </a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                  <a href="{% url 'riwayat_jabatan_update' j.pk %}" class="btn btn-sm btn-outline-warning" title="Edit SK">
+                    <i class="bx bx-edit-alt"></i>
+                  </a>
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapusJabatan{{ j.pk }}" title="Hapus SK">
+                    <i class="bx bx-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- MODAL HAPUS JABATAN -->
+            <div class="modal fade" id="modalHapusJabatan{{ j.pk }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-danger">
+                    <h5 class="modal-title text-white"><i class="bx bx-error me-1"></i> Konfirmasi Hapus Jabatan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{% url 'riwayat_jabatan_delete' j.pk %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body text-center py-4">
+                      <p class="mb-2">Apakah Anda yakin ingin menghapus riwayat jabatan <strong>{{ j.jabatan.nama_jabatan }}</strong>?</p>
+                      <p class="text-muted small mb-0">Nomor SK: {{ j.nomor_sk }}</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                      <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <tr><td colspan="8" class="text-center py-4 text-muted">Belum ada riwayat jabatan.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: RIWAYAT PANGKAT -->
+  <div class="tab-pane fade" id="pills-pangkat" role="tabpanel" aria-labelledby="pills-pangkat-tab">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0 fw-bold">Riwayat Golongan / Pangkat</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'riwayat_pangkat_create' pegawai.pk %}" class="btn btn-primary btn-sm">
+            <i class="bx bx-plus me-1"></i> Tambah SK Pangkat
+          </a>
+        </div>
+      </div>
+      <div class="table-responsive text-nowrap">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Pangkat / Golongan</th>
+              <th>Jenis KP</th>
+              <th>TMT Pangkat</th>
+              <th>Nomor SK</th>
+              <th>Tanggal SK</th>
+              <th>File</th>
+              <th class="text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in riwayat_pangkat_list %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>
+                <strong>{{ p.pangkat.nama_pangkat }}</strong>
+                <span class="badge bg-label-primary ms-1">{{ p.pangkat.golongan }}</span>
+              </td>
+              <td><span class="badge bg-label-secondary">{{ p.get_jenis_kp_display }}</span></td>
+              <td><span class="badge bg-label-info">{{ p.tmt_pangkat|date:"d M Y" }}</span></td>
+              <td>{{ p.nomor_sk }}</td>
+              <td>{{ p.tanggal_sk|date:"d M Y" }}</td>
+              <td>
+                {% if p.file_sk %}
+                  <a href="{{ p.file_sk.url }}" target="_blank" class="btn btn-xs btn-outline-primary" title="Lihat SK">
+                    <i class="bx bx-download"></i>
+                  </a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <a href="{% url 'riwayat_pangkat_update' p.pk %}" class="btn btn-sm btn-outline-warning" title="Edit SK">
+                  <i class="bx bx-edit-alt"></i>
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapusPangkat{{ p.pk }}" title="Hapus SK">
+                  <i class="bx bx-trash"></i>
+                </button>
+              </td>
+            </tr>
+
+            <!-- MODAL HAPUS PANGKAT -->
+            <div class="modal fade" id="modalHapusPangkat{{ p.pk }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-danger">
+                    <h5 class="modal-title text-white"><i class="bx bx-error me-1"></i> Konfirmasi Hapus Pangkat</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{% url 'riwayat_pangkat_delete' p.pk %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body text-center py-4">
+                      <p class="mb-2">Apakah Anda yakin ingin menghapus riwayat pangkat <strong>{{ p.pangkat }}</strong>?</p>
+                      <p class="text-muted small mb-0">Nomor SK: {{ p.nomor_sk }}</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                      <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <tr><td colspan="8" class="text-center py-4 text-muted">Belum ada riwayat pangkat.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: RIWAYAT PENDIDIKAN -->
+<div class="tab-pane fade" id="pills-pendidikan" role="tabpanel" aria-labelledby="pills-pendidikan-tab">
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0 fw-bold">Riwayat Pendidikan Pegawai</h5>
+      <div class="d-flex gap-2">
+        <a href="{% url 'riwayat_pendidikan_create' pegawai.pk %}" class="btn btn-primary btn-sm">
+          <i class="bx bx-plus me-1"></i> Tambah Pendidikan
+        </a>
+      </div>
+    </div>
+    <div class="table-responsive text-nowrap">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tingkat</th>
+            <th>Nama Sekolah / Universitas</th>
+            <th>Jurusan</th>
+            <th class="text-center">Tampilkan Gelar</th>
+            <th>Tahun Lulus</th>
+            <th>Nomor & Tgl Ijazah</th>
+            <th>File</th>
+            <th class="text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in riwayat_pendidikan_list %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+              <span class="badge bg-label-primary">{{ p.tingkat.kode }}</span>
+              {% if p.is_pendidikan_pertama %}
+                <span class="badge bg-label-success ms-1" title="Pendidikan saat pengangkatan awal">Awal</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ p.nama_sekolah }}</strong>
+              {% if p.gelar_depan or p.gelar_belakang %}
+                <small class="d-block text-primary fw-semibold">
+                  Gelar: {{ p.gelar_depan|default:"" }} [Nama] {{ p.gelar_belakang|default:"" }}
+                </small>
+              {% endif %}
+            </td>
+            <td>{{ p.jurusan|default:"-" }}</td>
+            
+            <!-- TOMBOL SAKELAR (SWITCH) TOGGLE GELAR -->
+            <td class="text-center">
+              {% if p.gelar_depan or p.gelar_belakang %}
+                <div class="form-check form-switch d-flex justify-content-center">
+                  <input 
+                    class="form-check-input toggle-gelar-switch" 
+                    type="checkbox" 
+                    role="switch" 
+                    data-id="{{ p.pk }}"
+                    {% if p.tampilkan_gelar %}checked{% endif %}
+                    title="Aktifkan/Matikan tampilan gelar dari pendidikan ini"
+                  >
+                </div>
+              {% else %}
+                <span class="text-muted small">-</span>
+              {% endif %}
+            </td>
+
+            <td><span class="badge bg-label-info">{{ p.tahun_lulus }}</span></td>
+            <td>
+              <small class="d-block">{{ p.nomor_ijazah }}</small>
+              <small class="text-muted">{{ p.tanggal_ijazah|date:"d M Y" }}</small>
+            </td>
+            <td>
+              {% if p.file_ijazah %}
+                <a href="{{ p.file_ijazah.url }}" target="_blank" class="btn btn-xs btn-outline-primary" title="Lihat Ijazah">
+                  <i class="bx bx-download"></i>
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <a href="{% url 'riwayat_pendidikan_update' p.pk %}" class="btn btn-sm btn-outline-warning" title="Edit">
+                <i class="bx bx-edit-alt"></i>
+              </a>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapusPendidikan{{ p.pk }}" title="Hapus">
+                <i class="bx bx-trash"></i>
+              </button>
+            </td>
+          </tr>
+
+          <!-- MODAL HAPUS PENDIDIKAN -->
+          <div class="modal fade" id="modalHapusPendidikan{{ p.pk }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header bg-danger">
+                  <h5 class="modal-title text-white"><i class="bx bx-error me-1"></i> Konfirmasi Hapus Pendidikan</h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{% url 'riwayat_pendidikan_delete' p.pk %}" method="post">
+                  {% csrf_token %}
+                  <div class="modal-body text-center py-4">
+                    <p class="mb-2">Apakah Anda yakin ingin menghapus pendidikan <strong>{{ p.tingkat.kode }} - {{ p.nama_sekolah }}</strong>?</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <tr><td colspan="9" class="text-center py-4 text-muted">Belum ada riwayat pendidikan.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- Auto Active Tab berdasarkan URL Parameter -->
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const activeTabParam = urlParams.get('tab');
+  
+  if (activeTabParam) {
+    const targetTabBtn = document.querySelector(`#pills-${activeTabParam}-tab`);
+    if (targetTabBtn) {
+      const tab = new bootstrap.Tab(targetTabBtn);
+      tab.show();
+    }
+  }
+});
+</script>
+{% endblock %}
+
+{% endblock %}

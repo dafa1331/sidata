@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center border-bottom py-3">
+        <h5 class="mb-0 fw-bold"><i class="bx bx-book-open me-2 text-primary"></i> {{ title }}</h5>
+      </div>
+      <div class="card-body py-4">
+
+        <!-- ALERT NOTIFIKASI SYSTEM -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- FIELD PEGAWAI (TERSEDIA JIKA MEMAKAI ENTRYPENDIDIKANFORM) -->
+          {% if form.pegawai %}
+            <div class="mb-3">
+              <label class="form-label fw-bold">{{ form.pegawai.label }}</label>
+              {{ form.pegawai }}
+              {% if form.pegawai.errors %}<div class="text-danger small mt-1">{{ form.pegawai.errors.0 }}</div>{% endif %}
+            </div>
+            <hr class="my-3">
+          {% endif %}
+
+          <!-- 1. TINGKAT & TAHUN LULUS -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Tingkat Pendidikan</label>
+              {{ form.tingkat }}
+              {% if form.tingkat.errors %}<div class="text-danger small mt-1">{{ form.tingkat.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Tahun Lulus</label>
+              {{ form.tahun_lulus }}
+              {% if form.tahun_lulus.errors %}<div class="text-danger small mt-1">{{ form.tahun_lulus.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- 2. SEKOLAH & JURUSAN -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Nama Sekolah / Universitas</label>
+              {{ form.nama_sekolah }}
+              {% if form.nama_sekolah.errors %}<div class="text-danger small mt-1">{{ form.nama_sekolah.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Jurusan / Program Studi</label>
+              {{ form.jurusan }}
+              {% if form.jurusan.errors %}<div class="text-danger small mt-1">{{ form.jurusan.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- 3. GELAR DEPAN & GELAR BELAKANG (FIELD BARU) -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Gelar Depan <small class="text-muted fw-normal">(Opsional)</small></label>
+              {% if form.gelar_depan %}
+                {{ form.gelar_depan }}
+                {% if form.gelar_depan.errors %}<div class="text-danger small mt-1">{{ form.gelar_depan.errors.0 }}</div>{% endif %}
+              {% else %}
+                <input type="text" name="gelar_depan" class="form-control" placeholder="Contoh: Dr. / Drs. / Ir.">
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Gelar Belakang <small class="text-muted fw-normal">(Opsional)</small></label>
+              {% if form.gelar_belakang %}
+                {{ form.gelar_belakang }}
+                {% if form.gelar_belakang.errors %}<div class="text-danger small mt-1">{{ form.gelar_belakang.errors.0 }}</div>{% endif %}
+              {% else %}
+                <input type="text" name="gelar_belakang" class="form-control" placeholder="Contoh: S.Kom. / M.T. / Ph.D.">
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- 4. NOMOR & TANGGAL IJAZAH -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Nomor Ijazah</label>
+              {{ form.nomor_ijazah }}
+              {% if form.nomor_ijazah.errors %}<div class="text-danger small mt-1">{{ form.nomor_ijazah.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-bold">Tanggal Ijazah</label>
+              {{ form.tanggal_ijazah }}
+              {% if form.tanggal_ijazah.errors %}<div class="text-danger small mt-1">{{ form.tanggal_ijazah.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- 5. CHECKBOX PENDIDIKAN PERTAMA -->
+          <div class="mb-3 form-check">
+            {{ form.is_pendidikan_pertama }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_pendidikan_pertama.id_for_label }}">
+              Pendidikan Pertama Saat Pengangkatan CPNS/PPPK
+            </label>
+          </div>
+
+          <!-- 6. FILE IJAZAH PDF -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Upload Berkas Ijazah (PDF)</label>
+            {{ form.file_ijazah }}
+            {% if form.file_ijazah.errors %}<div class="text-danger small mt-1">{{ form.file_ijazah.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- TOMBOL AKSI -->
+          <div class="mt-4 pt-2 border-top d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bx bx-save me-1"></i> Simpan Riwayat Pendidikan
+            </button>
+            {% if pegawai %}
+              <a href="{% url 'pegawai_detail' pegawai.pk %}?tab=pendidikan" class="btn btn-outline-secondary">Batal</a>
+            {% else %}
+              <a href="{% url 'pegawai_list' %}" class="btn btn-outline-secondary">Batal</a>
+            {% endif %}
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

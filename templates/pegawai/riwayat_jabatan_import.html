@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center border-bottom py-3">
+        <h5 class="mb-0 fw-bold"><i class="bx bx-upload me-2 text-primary"></i> {{ title }}</h5>
+      </div>
+      <div class="card-body py-4">
+        
+        <!-- ALERT PESAN SYSTEM -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <!-- INFORMASI PETUNJUK FORMAT EXCEL -->
+        <div class="alert alert-info border-0 small mb-4" style="background-color: #e7f3ff; color: #0c5460;">
+          <h6 class="fw-bold mb-1"><i class="bx bx-info-circle me-1"></i> Petunjuk Import Data Existing:</h6>
+          <p class="mb-2">Gunakan file Excel/CSV dengan header kolom sebagai berikut (huruf kecil semua):</p>
+          
+          <code class="d-block bg-white p-2 rounded mb-2 border text-dark fw-bold">
+            nip | nama_jabatan | unit_kerja | tmt_jabatan | nomor_sk | tanggal_sk | pejabat_penetap | status_pelantikan
+          </code>
+          
+          <ul class="mb-0 ps-3 small text-muted">
+            <li>Format Tanggal wajib: <code>YYYY-MM-DD</code> (Contoh: <code>2024-05-15</code>).</li>
+            <li>
+              <strong>Jabatan Pelaksana & Struktural:</strong> Tidak membutuhkan pelantikan JF. Sistem akan otomatis menyimpannya sebagai status definitif.
+            </li>
+            <li>
+              <strong>Jabatan Fungsional:</strong> Boleh ditulis langsung beserta jenjangnya (Contoh: <code>ANALIS SUMBER DAYA MANUSIA APARATUR AHLI MADYA</code>).
+            </li>
+            <li>
+              <strong>Kolom `status_pelantikan` (Opsional):</strong> Khusus Jabatan Fungsional yang masih CPNS/belum diangkat resmi, isi dengan <code>BELUM_DILANTIK</code> atau <code>CPNS</code> (Sistem akan menandainya sebagai <em>Tugas Pelaksana</em>). Jika dikosongkan, otomatis diset ke <code>DILANTIK</code>.
+            </li>
+            <li>
+              <strong>Validasi Struktural:</strong> Posisi jabatan struktural akan dikunci otomatis jika sudah diduduki pejabat aktif lain.
+            </li>
+          </ul>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-bold">{{ form.file_excel.label }}</label>
+            {{ form.file_excel }}
+            {% if form.file_excel.errors %}
+              <div class="text-danger small mt-1">{{ form.file_excel.errors.0 }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-1">Format berkas yang didukung: <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code></small>
+          </div>
+
+          <div class="mt-4 pt-2 border-top d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bx bx-check me-1"></i> Proses Import Data
+            </button>
+            <a href="{% url 'pegawai_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

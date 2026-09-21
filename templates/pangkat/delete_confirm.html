@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Hapus Pangkat{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6 mx-auto">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="card-title text-danger">Konfirmasi Hapus Data</h5>
+        <p class="card-text">
+          Apakah Anda yakin ingin menghapus master pangkat <strong>{{ pangkat.nama_pangkat }} ({{ pangkat.golongan }})</strong>?
+        </p>
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger me-2">Ya, Hapus</button>
+          <a href="{% url 'pangkat_list' %}" class="btn btn-secondary">Batal</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-7 mx-auto">
+
+    <!-- ALERT PESAN EROR & NOTIFIKASI -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {% if message.tags == 'danger' or message.tags == 'error' %}
+            <i class="bx bx-error-circle me-1"></i>
+          {% elif message.tags == 'warning' %}
+            <i class="bx bx-error me-1"></i>
+          {% else %}
+            <i class="bx bx-check-circle me-1"></i>
+          {% endif %}
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm">
+      <div class="card-header border-bottom py-3">
+        <h5 class="mb-0 fw-bold">{{ title }}</h5>
+      </div>
+      <div class="card-body py-4">
+        
+        <div class="alert alert-info border-0 small mb-4">
+          <h6 class="fw-bold mb-1"><i class="bx bx-info-circle me-1"></i> Petunjuk Format File Excel:</h6>
+          <ul class="mb-0 ps-3">
+            <li>Header WAJIB: <code>nama_jabatan</code> dan <code>jenis</code> (Struktural / Pelaksana / Fungsional).</li>
+            <li>Header OPSI: <code>jenjang</code> (Ahli Pertama, Mahir, dll) dan <code>eselon</code> (II.a, III.a, dll).</li>
+            <li>Sistem akan otomatis membuat Jenis dan Jenjang baru jika belum terdaftar.</li>
+          </ul>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label class="form-label fw-bold">{{ form.file_excel.label }}</label>
+            {{ form.file_excel }}
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bx bx-upload me-1"></i> Upload & Import Data
+            </button>
+            <a href="{% url 'jabatan_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

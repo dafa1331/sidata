@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}Daftar Pegawai{% endblock %}
+
+{% block content %}
+<!-- Alert Notifikasi -->
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="card">
+  <!-- Header & Tombol Aksi -->
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">
+    <h5 class="mb-0 fw-bold">Data Pegawai</h5>
+    
+    <div class="d-flex gap-2 flex-wrap">
+      <!-- DROPDOWN IMPORT DATA EXISTING -->
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bx bx-upload me-1"></i> Import Data
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow">
+          <li><a class="dropdown-item" href="{% url 'pegawai_import' %}"><i class="bx bx-user me-2 text-primary"></i>Import Pegawai Baru</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{% url 'riwayat_jabatan_import' %}"><i class="bx bx-briefcase me-2 text-info"></i>Import Jabatan Existing</a></li>
+          <li><a class="dropdown-item" href="{% url 'riwayat_pangkat_import' %}"><i class="bx bx-award me-2 text-warning"></i>Import Pangkat Existing</a></li>
+          <li><a class="dropdown-item" href="{% url 'riwayat_pendidikan_import' %}"><i class="bx bx-book-open me-2 text-success"></i>Import Pendidikan Existing</a></li>
+        </ul>
+      </div>
+
+      <!-- PELANTIKAN MASSAL -->
+      <a href="{% url 'pelantikan_massal' %}" class="btn btn-warning btn-sm">
+        <i class="bx bx-group me-1"></i> Pelantikan Massal
+      </a>
+
+      <!-- TAMBAH PEGAWAI INDIVIDU -->
+      <a href="{% url 'pegawai_create' %}" class="btn btn-primary btn-sm">
+        <i class="bx bx-plus me-1"></i> Tambah Pegawai
+      </a>
+    </div>
+  </div>
+
+  <!-- Form Search & Filter -->
+  <div class="card-body bg-light-subtle border-bottom py-3">
+    <form method="get" class="row g-2 align-items-center">
+      <!-- CARI TEXT -->
+      <div class="col-md-3">
+        <div class="input-group input-group-merge">
+          <span class="input-group-text"><i class="bx bx-search"></i></span>
+          <input type="text" name="q" class="form-control" placeholder="NIP, Nama, Email..." value="{{ query|default:'' }}">
+        </div>
+      </div>
+
+     <!-- FILTER JABATAN -->
+    <div class="col-md-3">
+      <select name="jabatan" class="form-select">
+        <option value="">-- Semua Jabatan --</option>
+        
+        <!-- OPSI KHUSUS BELUM ADA JABATAN -->
+        <option value="BELUM_ADA" {% if jabatan_filter == 'BELUM_ADA' %}selected{% endif %}>
+          ⚠️ [Belum Ada Jabatan]
+        </option>
+        <option disabled>------------------------</option>
+        
+        <!-- DAFTAR JABATAN UNIQUE (DUPLIKASI SUDAH DIGABUNGKAN JADI 1) -->
+        {% for jb in jabatan_list %}
+          <option value="{{ jb.id_terwakili }}" {% if jabatan_filter == jb.id_terwakili|stringformat:'s' %}selected{% endif %}>
+            {{ jb.nama_jabatan }}{% if jb.jenjang__nama %} - {{ jb.jenjang__nama }}{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+      <!-- FILTER JENIS KELAMIN -->
+      <div class="col-md-3">
+        <select name="jk" class="form-select">
+          <option value="">-- Semua Jenis Kelamin --</option>
+          <option value="L" {% if jk_filter == 'L' %}selected{% endif %}>Laki-laki</option>
+          <option value="P" {% if jk_filter == 'P' %}selected{% endif %}>Perempuan</option>
+        </select>
+      </div>
+
+      <!-- TOMBOL SUBMIT & RESET -->
+      <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bx bx-filter-alt me-1"></i> Filter
+        </button>
+        {% if query or jk_filter or jabatan_filter %}
+          <a href="{% url 'pegawai_list' %}" class="btn btn-outline-secondary" title="Reset Filter">
+            <i class="bx bx-refresh"></i>
+          </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabel Data -->
+  <div class="table-responsive text-nowrap">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="width: 25%;">Pegawai</th>
+          <th style="width: 30%;">Jabatan & Unit Kerja Terakhir</th>
+          <th style="width: 15%;">Pangkat / Gol.</th>
+          <th style="width: 15%;">Pendidikan</th>
+          <th style="width: 15%;" class="text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pegawai_list %}
+        <tr>
+          <!-- IDENTITAS PEGAWAI -->
+          <td>
+            <div class="d-flex align-items-center">
+              <div class="avatar avatar-sm me-2 bg-label-primary rounded-circle d-flex align-items-center justify-content-center">
+                <i class="bx bx-user fs-4"></i>
+              </div>
+              <div>
+                <strong class="d-block text-dark">{{ p.nama_dengan_gelar }}</strong>
+                <small class="text-muted">NIP: {{ p.nip }}</small>
+              </div>
+            </div>
+          </td>
+
+          <!-- JABATAN TERAKHIR -->
+          <td class="text-wrap">
+            {% if p.jabatan_terakhir %}
+              <div class="fw-bold text-dark">
+                {{ p.jabatan_terakhir.jabatan.nama_jabatan }}
+                
+                {% if p.jabatan_terakhir.status_pelantikan == 'BELUM_DILANTIK' and p.jabatan_terakhir.jabatan.jenis.nama|lower == 'fungsional' %}
+                  <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">
+                    <i class="bx bx-time-five me-1"></i>Tugas Pelaksana (CPNS)
+                  </span>
+                {% elif p.jabatan_terakhir.jabatan.jenjang %}
+                  <span class="text-primary fw-bold"> - {{ p.jabatan_terakhir.jabatan.jenjang.nama }}</span>
+                {% endif %}
+              </div>
+              <small class="text-muted d-block line-height-sm">
+                <i class="bx bx-building-house me-1"></i>{{ p.jabatan_terakhir.unit_kerja }}
+              </small>
+            {% else %}
+              <span class="badge bg-label-secondary fs-tiny">- Belum ada jabatan -</span>
+            {% endif %}
+          </td>
+
+          <!-- PANGKAT TERAKHIR -->
+          <td>
+            {% if p.pangkat_terakhir %}
+              <span class="badge bg-label-primary mb-1">{{ p.pangkat_terakhir.pangkat.golongan }}</span>
+              <small class="d-block text-muted">{{ p.pangkat_terakhir.pangkat.nama_pangkat }}</small>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+
+          <!-- PENDIDIKAN TERAKHIR -->
+          <td>
+            {% if p.pendidikan_terakhir %}
+              <span class="badge bg-label-info mb-1">{{ p.pendidikan_terakhir.tingkat.kode }}</span>
+              <small class="d-block text-muted text-truncate" style="max-width: 150px;">{{ p.pendidikan_terakhir.jurusan|default:"-" }}</small>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+
+          <!-- KOLOM AKSI -->
+          <td class="text-center">
+            <div class="d-flex justify-content-center gap-1">
+              <a href="{% url 'pegawai_detail' p.pk %}" class="btn btn-sm btn-primary" title="Detail Profil">
+                <i class="bx bx-show me-1"></i> Detail
+              </a>
+              <a href="{% url 'pegawai_update' p.pk %}" class="btn btn-sm btn-outline-warning" title="Edit Pegawai">
+                <i class="bx bx-edit-alt"></i>
+              </a>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapusPegawai{{ p.pk }}" title="Hapus Pegawai">
+                <i class="bx bx-trash"></i>
+              </button>
+            </div>
+
+            <!-- MODAL KONFIRMASI HAPUS PEGAWAI -->
+            <div class="modal fade" id="modalHapusPegawai{{ p.pk }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content overflow-hidden border-0 shadow">
+                  <div class="modal-header bg-danger text-white position-relative py-3">
+                    <h5 class="modal-title text-white mb-0 d-flex align-items-center">
+                      <i class="bx bx-error fs-4 me-2"></i> Konfirmasi Hapus Pegawai
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <form action="{% url 'pegawai_delete' p.pk %}" method="post">
+                    {% csrf_token %}
+                    <div class="modal-body text-center p-4">
+                      <p class="text-muted mb-2">Apakah Anda yakin ingin menghapus data pegawai berikut?</p>
+                      <div class="bg-light p-3 rounded mb-3">
+                        <h6 class="fw-bold mb-1 text-dark">{{ p.nama_lengkap }}</h6>
+                        <span class="badge bg-label-secondary">NIP: {{ p.nip }}</span>
+                      </div>
+                      <div class="alert alert-warning border-0 small text-start mb-0 p-3" style="white-space: normal; word-break: break-word;">
+                        <div class="d-flex align-items-start">
+                          <i class="bx bx-info-circle fs-5 me-2 text-warning flex-shrink-0 mt-1"></i>
+                          <div>
+                            <strong>Peringatan:</strong> Menghapus pegawai ini akan menghapus seluruh data <strong>Riwayat Kepegawaian, Jabatan, Pangkat, dan Pendidikan</strong> yang terhubung secara permanen.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer bg-light justify-content-center border-0 pb-4">
+                      <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                      <button type="submit" class="btn btn-danger px-4">Ya, Hapus Permanen</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-5 text-muted">
+            <i class="bx bx-folder-open fs-1 d-block mb-2 text-secondary"></i>
+            Tidak ada data pegawai yang ditemukan.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Navigation Pagination -->
+  {% if pegawai_list.has_other_pages %}
+  <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2 border-top">
+    <small class="text-muted">
+      Menampilkan {{ pegawai_list.start_index }} - {{ pegawai_list.end_index }} dari {{ pegawai_list.paginator.count }} data
+    </small>
+    
+    <nav aria-label="Page navigation">
+      <ul class="pagination pagination-sm mb-0">
+        <!-- Previous Page -->
+        {% if pegawai_list.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pegawai_list.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if jk_filter %}&jk={{ jk_filter }}{% endif %}{% if jabatan_filter %}&jabatan={{ jabatan_filter }}{% endif %}">
+              <i class="tf-icon bx bx-chevron-left"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="tf-icon bx bx-chevron-left"></i></span></li>
+        {% endif %}
+
+        <!-- Page Numbers -->
+        {% for num in pegawai_list.paginator.page_range %}
+          {% if pegawai_list.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > pegawai_list.number|add:'-3' and num < pegawai_list.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if jk_filter %}&jk={{ jk_filter }}{% endif %}{% if jabatan_filter %}&jabatan={{ jabatan_filter }}{% endif %}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        <!-- Next Page -->
+        {% if pegawai_list.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ pegawai_list.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if jk_filter %}&jk={{ jk_filter }}{% endif %}{% if jabatan_filter %}&jabatan={{ jabatan_filter }}{% endif %}">
+              <i class="tf-icon bx bx-chevron-right"></i>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="tf-icon bx bx-chevron-right"></i></span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

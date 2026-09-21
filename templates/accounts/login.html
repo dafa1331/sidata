@@ -1,0 +1,306 @@
+{% load static %}
+
+<!DOCTYPE html>
+
+<!-- =========================================================
+* Sneat - Bootstrap 5 HTML Admin Template
+============================================================== -->
+
+<html
+  lang="id"
+  class="light-style customizer-hide"
+  dir="ltr"
+  data-theme="theme-default"
+  data-sneat-path="{% static 'sneat/' %}"
+  data-template="vertical-menu-template-free"
+>
+  <head>
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+
+    <title>Login - Dashboard ASN</title>
+
+    <meta name="description" content="Login Dashboard ASN" />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{% static 'sneat/img/favicon/logo.png' %}"
+    />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons -->
+    <link
+      rel="stylesheet"
+      href="{% static 'sneat/vendor/fonts/boxicons.css' %}"
+    />
+
+    <!-- Core CSS -->
+    <link
+      rel="stylesheet"
+      href="{% static 'sneat/vendor/css/core.css' %}"
+      class="template-customizer-core-css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'sneat/vendor/css/theme-default.css' %}"
+      class="template-customizer-theme-css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'sneat/css/demo.css' %}"
+    />
+
+    <!-- Vendors CSS -->
+    <link
+      rel="stylesheet"
+      href="{% static 'sneat/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}"
+    />
+
+    <!-- Page CSS -->
+    <link
+      rel="stylesheet"
+      href="{% static 'sneat/vendor/css/pages/page-auth.css' %}"
+    />
+
+    <!-- Helpers -->
+    <script src="{% static 'sneat/vendor/js/helpers.js' %}"></script>
+
+    <!-- Sneat Config -->
+    <script src="{% static 'sneat/js/config.js' %}"></script>
+  </head>
+
+  <body>
+
+    <!-- Content -->
+    <div class="container-xxl">
+
+      <div class="authentication-wrapper authentication-basic container-p-y">
+
+        <div class="authentication-inner">
+
+          <!-- Login Card -->
+          <div class="card">
+
+            <div class="card-body">
+
+              <!-- Logo -->
+              <div class="app-brand justify-content-center">
+
+                <a href="#" class="app-brand-link gap-2">
+                  <span class="app-brand-logo demo">
+                    {% load static %}
+                    <img src="{% static 'sneat/img/favicon/logo.png' %}" alt="Logo SI-Data ASN" style="height: 28px; width: auto;" />
+                  </span>
+                  <!-- <span class="app-brand-text demo text-body fw-bolder">
+                    DASHBOARD ASN
+                  </span> -->
+
+                </a>
+
+              </div>
+              <!-- /Logo -->
+
+
+              <h4 class="mb-2">
+                Selamat Datang! 👋
+              </h4>
+
+              <p class="mb-4">
+                Silakan masuk untuk melanjutkan ke Dashboard ASN
+              </p>
+
+
+              <!--
+              =====================================================
+              PESAN ERROR LOGIN
+              =====================================================
+              -->
+
+              {% if form.non_field_errors %}
+
+                <div class="alert alert-danger" role="alert">
+
+                  Username atau password yang Anda masukkan salah.
+
+                </div>
+
+              {% endif %}
+
+
+              <!--
+              =====================================================
+              FORM LOGIN DJANGO
+              =====================================================
+              -->
+
+              <form
+                id="formAuthentication"
+                class="mb-3"
+                method="post"
+              >
+
+                {% csrf_token %}
+
+
+                <!-- Username -->
+                <div class="mb-3">
+
+                  <label
+                    for="username"
+                    class="form-label"
+                  >
+                    Username
+                  </label>
+
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="username"
+                    name="username"
+                    placeholder="Masukkan username"
+                    autocomplete="username"
+                    autofocus
+                    required
+                  />
+
+                </div>
+
+
+                <!-- Password -->
+                <div class="mb-3 form-password-toggle">
+
+                  <div class="d-flex justify-content-between">
+
+                    <label
+                      class="form-label"
+                      for="password"
+                    >
+                      Password
+                    </label>
+
+                    <a href="#">
+                      <small>Lupa Password?</small>
+                    </a>
+
+                  </div>
+
+
+                  <div class="input-group input-group-merge">
+
+                    <input
+                      type="password"
+                      id="password"
+                      class="form-control"
+                      name="password"
+                      placeholder="Masukkan password"
+                      autocomplete="current-password"
+                      required
+                    />
+
+                    <span class="input-group-text cursor-pointer">
+                      <i class="bx bx-hide"></i>
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <!-- Remember Me -->
+                <div class="mb-3">
+
+                  <div class="form-check">
+
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="remember-me"
+                      name="remember_me"
+                    />
+
+                    <label
+                      class="form-check-label"
+                      for="remember-me"
+                    >
+                      Ingat saya
+                    </label>
+
+                  </div>
+
+                </div>
+
+
+                <!-- Submit -->
+                <div class="mb-3">
+
+                  <button
+                    class="btn btn-primary d-grid w-100"
+                    type="submit"
+                  >
+                    Sign in
+                  </button>
+
+                </div>
+
+              </form>
+
+
+              <p class="text-center">
+
+                <span>
+                  SI Data ASN
+                </span>
+
+              </p>
+
+            </div>
+
+          </div>
+          <!-- /Login Card -->
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- / Content -->
+
+
+    <!-- Core JS -->
+
+    <script src="{% static 'sneat/vendor/libs/jquery/jquery.js' %}"></script>
+
+    <script src="{% static 'sneat/vendor/libs/popper/popper.js' %}"></script>
+
+    <script src="{% static 'sneat/vendor/js/bootstrap.js' %}"></script>
+
+    <script src="{% static 'sneat/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+
+    <script src="{% static 'sneat/vendor/js/menu.js' %}"></script>
+
+
+    <!-- Main JS -->
+
+    <script src="{% static 'sneat/js/main.js' %}"></script>
+
+
+  </body>
+
+</html>

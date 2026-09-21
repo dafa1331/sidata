@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold text-dark"><i class="bx bx-upload me-1 text-primary"></i> Import Pegawai & SK / Kontrak Massal</h5>
+      </div>
+      <div class="card-body">
+        
+        <div class="alert alert-info border-0 shadow-sm">
+          <h6 class="fw-bold mb-2"><i class="bx bx-info-circle me-1"></i> Format Header Kolom Excel / CSV:</h6>
+          <p class="mb-1 small">Pastikan file Anda menyertakan header berikut (huruf kecil):</p>
+          <code class="d-block bg-white p-2 rounded mb-2 border small text-wrap">
+            nip | nama_lengkap | tempat_lahir | tanggal_lahir | jenis_kelamin | agama | alamat | nomor_hp | email | jenis_transaksi | tmt | tmt_selesai | nomor_sk | tanggal_sk | keterangan
+          </code>
+          <ul class="mb-0 small ps-3">
+            <li><strong>jenis_kelamin:</strong> <code>L</code> atau <code>P</code></li>
+            <li><strong>jenis_transaksi:</strong> <code>CPNS</code>, <code>PNS</code>, <code>PPPK</code>, <code>PERPANJANGAN_PPPK</code>, <code>PPPK_PW</code>, <code>PERPANJANGAN_PPPK_PW</code>, dll.</li>
+            <li><strong>tmt_selesai:</strong> Digunakan khusus PPPK / PPPK PW untuk batas akhir kontrak (Boleh dikosongkan jika PNS/CPNS).</li>
+            <li><strong>Format Tanggal:</strong> YYYY-MM-DD (Contoh: <code>2026-03-01</code>)</li>
+          </ul>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-bold small">{{ form.file_excel.label }}</label>
+            {{ form.file_excel }}
+            {% if form.file_excel.errors %}<div class="text-danger small mt-1">{{ form.file_excel.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bx bx-check me-1"></i> Proses Import
+            </button>
+            <a href="{% url 'pegawai_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

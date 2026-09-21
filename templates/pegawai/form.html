@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-9 mx-auto">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ title }}</h5>
+      </div>
+      <div class="card-body">
+        <!-- Tambahkan enctype agar bisa mengunggah berkas SK PDF -->
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- SEKSI 1: IDENTITAS DIRI -->
+          <h6 class="text-primary mb-3"><i class="bx bx-user me-1"></i> Data Identitas Pegawai</h6>
+
+          <div class="row">
+            <!-- NIP -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">NIP</label>
+              {{ form.nip }}
+              {% if form.nip.errors %}<div class="text-danger small mt-1">{{ form.nip.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Nama Lengkap -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nama Lengkap</label>
+              {{ form.nama_lengkap }}
+              {% if form.nama_lengkap.errors %}<div class="text-danger small mt-1">{{ form.nama_lengkap.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Tempat Lahir -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tempat Lahir</label>
+              {{ form.tempat_lahir }}
+              {% if form.tempat_lahir.errors %}<div class="text-danger small mt-1">{{ form.tempat_lahir.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Tanggal Lahir -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tanggal Lahir</label>
+              {{ form.tanggal_lahir }}
+              {% if form.tanggal_lahir.errors %}<div class="text-danger small mt-1">{{ form.tanggal_lahir.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Jenis Kelamin -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Jenis Kelamin</label>
+              {{ form.jenis_kelamin }}
+              {% if form.jenis_kelamin.errors %}<div class="text-danger small mt-1">{{ form.jenis_kelamin.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Agama -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Agama</label>
+              {{ form.agama }}
+              {% if form.agama.errors %}<div class="text-danger small mt-1">{{ form.agama.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- No HP -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nomor HP</label>
+              {{ form.nomor_hp }}
+              {% if form.nomor_hp.errors %}<div class="text-danger small mt-1">{{ form.nomor_hp.errors.0 }}</div>{% endif %}
+            </div>
+
+            <!-- Email -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <!-- Alamat -->
+          <div class="mb-3">
+            <label class="form-label">Alamat</label>
+            {{ form.alamat }}
+            {% if form.alamat.errors %}<div class="text-danger small mt-1">{{ form.alamat.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- SEKSI 2: SK PENGANGKATAN AWAL (HANYA MUNCUL SAAT TAMBAH PEGAWAI BARU) -->
+          {% if is_create %}
+            <hr class="my-4">
+            <h6 class="text-primary mb-3"><i class="bx bx-file me-1"></i> Data SK Pengangkatan Awal</h6>
+
+            <div class="row">
+              <!-- Jenis Pengangkatan Awal -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.jenis_transaksi.label }}</label>
+                {{ form.jenis_transaksi }}
+                {% if form.jenis_transaksi.errors %}<div class="text-danger small mt-1">{{ form.jenis_transaksi.errors.0 }}</div>{% endif %}
+              </div>
+
+              <!-- TMT SK -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.tmt_sk.label }}</label>
+                {{ form.tmt_sk }}
+                {% if form.tmt_sk.errors %}<div class="text-danger small mt-1">{{ form.tmt_sk.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Nomor SK -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.nomor_sk.label }}</label>
+                {{ form.nomor_sk }}
+                {% if form.nomor_sk.errors %}<div class="text-danger small mt-1">{{ form.nomor_sk.errors.0 }}</div>{% endif %}
+              </div>
+
+              <!-- Tanggal SK -->
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.tanggal_sk.label }}</label>
+                {{ form.tanggal_sk }}
+                {% if form.tanggal_sk.errors %}<div class="text-danger small mt-1">{{ form.tanggal_sk.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+
+            <!-- Upload File SK -->
+            <div class="mb-3">
+              <label class="form-label">{{ form.file_sk.label }}</label>
+              {{ form.file_sk }}
+              {% if form.file_sk.errors %}<div class="text-danger small mt-1">{{ form.file_sk.errors.0 }}</div>{% endif %}
+            </div>
+          {% endif %}
+
+          <!-- Tombol Aksi -->
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary me-2">Simpan Data</button>
+            <a href="{% url 'pegawai_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

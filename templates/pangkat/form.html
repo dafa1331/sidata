@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ title }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label">Golongan / Ruang</label>
+            {{ form.golongan }}
+            {% if form.golongan.errors %}<div class="text-danger small mt-1">{{ form.golongan.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Nama Pangkat</label>
+            {{ form.nama_pangkat }}
+            {% if form.nama_pangkat.errors %}<div class="text-danger small mt-1">{{ form.nama_pangkat.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Urutan Hirarki (Angka)</label>
+            {{ form.urutan }}
+            {% if form.urutan.errors %}<div class="text-danger small mt-1">{{ form.urutan.errors.0 }}</div>{% endif %}
+            <small class="text-muted d-block mt-1">* Digunakan untuk mengurutkan pangkat dari terendah ke tertinggi (contoh: I/a = 1, I/b = 2, dst).</small>
+          </div>
+
+          <div class="mb-3 form-check">
+            {{ form.is_active }}
+            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Status Aktif</label>
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary me-2">Simpan Data</button>
+            <a href="{% url 'pangkat_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

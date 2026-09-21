@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">{{ title }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+
+          <!-- Jenis Jabatan -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="{{ form.jenis.id_for_label }}">Jenis Jabatan</label>
+            {{ form.jenis }}
+            {% if form.jenis.errors %}
+              <div class="text-danger small mt-1">{{ form.jenis.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Nama Jabatan -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="{{ form.nama_jabatan.id_for_label }}">Nama Jabatan</label>
+            {{ form.nama_jabatan }}
+            {% if form.nama_jabatan.errors %}
+              <div class="text-danger small mt-1">{{ form.nama_jabatan.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- CONTAINER DYNAMIC: JENJANG JABATAN -->
+          <div class="mb-3" id="wrapper-jenjang" style="display: none;">
+            {% if is_create %}
+              <!-- TAMPILAN TAMBAH DATA: MULTIPLE CHECKBOX -->
+              <label class="form-label fw-semibold d-block">Pilih Jenjang Jabatan (Bisa Lebih Dari Satu):</label>
+              <div class="p-3 border rounded bg-light">
+                <div class="row g-2">
+                  {% for checkbox in form.jenjang_list %}
+                    <div class="col-md-6">
+                      <div class="form-check">
+                        {{ checkbox.tag }}
+                        <label class="form-check-label fw-medium" for="{{ checkbox.id_for_label }}">
+                          {{ checkbox.choice_label }}
+                        </label>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% if form.jenjang_list.errors %}
+                <div class="text-danger small mt-1">{{ form.jenjang_list.errors.0 }}</div>
+              {% endif %}
+              <small class="text-muted d-block mt-1">* Centang semua jenjang yang tersedia untuk nama jabatan fungsional ini.</small>
+
+            {% else %}
+
+              <!-- TAMPILAN EDIT DATA: DROPDOWN SELECT SINGLE -->
+              <label class="form-label fw-semibold" for="{{ form.jenjang.id_for_label }}">Jenjang Jabatan</label>
+              {{ form.jenjang }}
+              {% if form.jenjang.errors %}
+                <div class="text-danger small mt-1">{{ form.jenjang.errors.0 }}</div>
+              {% endif %}
+              <small class="text-muted d-block mt-1">* Pilih jenjang spesifik untuk jabatan ini.</small>
+
+            {% endif %}
+          </div>
+
+          <!-- CONTAINER DYNAMIC: ESELON (KHUSUS STRUKTURAL) -->
+          <div class="mb-3" id="wrapper-eselon" style="display: none;">
+            <label class="form-label fw-semibold" for="{{ form.eselon.id_for_label }}">Eselon</label>
+            {{ form.eselon }}
+            {% if form.eselon.errors %}
+              <div class="text-danger small mt-1">{{ form.eselon.errors.0 }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-1">* Isi eselon (contoh: II.a, III.a) jika jenis jabatan adalah Struktural.</small>
+          </div>
+
+          <!-- Checkbox Status Aktif -->
+          <div class="mb-3 form-check">
+            {{ form.is_active }}
+            <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">
+              Status Aktif
+            </label>
+          </div>
+
+          <!-- Tombol Aksi -->
+          <div class="mt-4 border-top pt-3">
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="bx bx-save me-1"></i> Simpan Data
+            </button>
+            <a href="{% url 'jabatan_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const jenisSelect = document.getElementById("{{ form.jenis.id_for_label }}");
+    const wrapperJenjang = document.getElementById("wrapper-jenjang");
+    const wrapperEselon = document.getElementById("wrapper-eselon");
+
+    function toggleFields() {
+      const selectedText = jenisSelect.options[jenisSelect.selectedIndex] ? jenisSelect.options[jenisSelect.selectedIndex].text.toLowerCase() : "";
+
+      // Tampilkan Jenjang jika Fungsional
+      if (selectedText.includes("fungsional")) {
+        wrapperJenjang.style.display = "block";
+      } else {
+        wrapperJenjang.style.display = "none";
+      }
+
+      // Tampilkan Eselon jika Struktural
+      if (selectedText.includes("struktural")) {
+        wrapperEselon.style.display = "block";
+      } else {
+        wrapperEselon.style.display = "none";
+      }
+    }
+
+    toggleFields();
+    jenisSelect.addEventListener("change", toggleFields);
+  });
+</script>
+{% endblock %}

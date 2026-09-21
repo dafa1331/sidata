@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-9 mx-auto">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bx bx-briefcase me-1"></i> {{ title }}</h5>
+      </div>
+      <div class="card-body">
+        
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- SEKSI 1: DATA SK KOLEKTIF -->
+          <h6 class="text-primary mb-3"><i class="bx bx-file me-1"></i> Data SK Pelantikan Kolektif</h6>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">{{ form.nomor_sk.label }}</label>
+              {{ form.nomor_sk }}
+              {% if form.nomor_sk.errors %}<div class="text-danger small mt-1">{{ form.nomor_sk.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">{{ form.tanggal_sk.label }}</label>
+              {{ form.tanggal_sk }}
+              {% if form.tanggal_sk.errors %}<div class="text-danger small mt-1">{{ form.tanggal_sk.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="form-label">{{ form.tmt_jabatan.label }}</label>
+              {{ form.tmt_jabatan }}
+              {% if form.tmt_jabatan.errors %}<div class="text-danger small mt-1">{{ form.tmt_jabatan.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">{{ form.pejabat_penetap.label }}</label>
+              {{ form.pejabat_penetap }}
+              {% if form.pejabat_penetap.errors %}<div class="text-danger small mt-1">{{ form.pejabat_penetap.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">{{ form.file_sk.label }}</label>
+              {{ form.file_sk }}
+              {% if form.file_sk.errors %}<div class="text-danger small mt-1">{{ form.file_sk.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- SEKSI 2: DAFTAR PEJABAT (EXCEL) -->
+          <h6 class="text-primary mb-3"><i class="bx bx-upload me-1"></i> Import Daftar Pejabat (Excel / CSV)</h6>
+          
+          <div class="alert alert-info">
+            <p class="mb-1 small"><strong>Format Kolom Excel yang Dibutuhkan:</strong></p>
+            <code class="d-block bg-white p-2 rounded mb-2 border small">
+              nip | nama_jabatan | unit_kerja | jenis_jabatan
+            </code>
+            <small class="text-muted">
+              * <strong>jenis_jabatan:</strong> <code>STRUKTURAL</code> / <code>FUNGSIONAL</code> / <code>JFT</code>
+            </small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">{{ form.file_excel.label }}</label>
+            {{ form.file_excel }}
+            {% if form.file_excel.errors %}<div class="text-danger small mt-1">{{ form.file_excel.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary me-2">
+              <i class="bx bx-check me-1"></i> Proses Pelantikan Massal
+            </button>
+            <a href="{% url 'pegawai_list' %}" class="btn btn-outline-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

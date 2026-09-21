@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h4 class="fw-bold mb-1"><i class="bx bx-bar-chart-alt-2 text-primary me-2"></i>{{ title }}</h4>
+    <p class="text-muted small mb-0">Ringkasan statistik data kepegawaian resmi instansi.</p>
+  </div>
+  <!-- Tombol Ekspor PDF (Membawa semua parameter filter aktif) -->
+  <a href="{% url 'export_laporan_pdf' %}?tahun={{ tahun_selected }}&bulan={{ bulan_selected }}&jenis={{ jenis_filter }}&status_pegawai={{ status_pegawai }}" target="_blank" class="btn btn-danger shadow-sm">
+    <i class="bx bxs-file-pdf me-1 fs-5"></i> Ekspor PDF Laporan Resmi
+  </a>
+</div>
+
+<!-- ================= FORM FILTER UTAMA ================= -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body bg-light py-3">
+    <form method="get" class="row g-2 align-items-end">
+      
+      <!-- 1. FILTER STATUS KATEGORI PEGAWAI -->
+      <div class="col-md-3">
+        <label class="form-label small fw-bold text-primary">Kategori Pegawai</label>
+        <select name="status_pegawai" class="form-select form-select-sm border-primary">
+          <option value="">-- Semua Pegawai --</option>
+          <option value="PNS" {% if status_pegawai == 'PNS' %}selected{% endif %}>Pegawai PNS</option>
+          <option value="PPPK" {% if status_pegawai == 'PPPK' %}selected{% endif %}>Pegawai PPPK</option>
+          <option value="PPPK_PW" {% if status_pegawai == 'PPPK_PW' %}selected{% endif %}>PPPK Paruh Waktu</option>
+        </select>
+      </div>
+
+      <!-- 2. FILTER TAHUN TMT (OPSI SEMUA TAHUN) -->
+      <div class="col-md-3">
+        <label class="form-label small fw-bold">Tahun TMT</label>
+        <select name="tahun" class="form-select form-select-sm">
+          <option value="" {% if not tahun_selected %}selected{% endif %}>-- Semua Tahun --</option>
+          {% for th in list_tahun %}
+            <option value="{{ th }}" {% if tahun_selected == th|stringformat:'s' %}selected{% endif %}>
+              Tahun {{ th }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 3. FILTER BULAN TMT -->
+      <div class="col-md-2">
+        <label class="form-label small fw-bold">Bulan TMT</label>
+        <select name="bulan" class="form-select form-select-sm">
+          <option value="">-- Semua Bulan --</option>
+          <option value="1" {% if bulan_selected == '1' %}selected{% endif %}>Januari</option>
+          <option value="2" {% if bulan_selected == '2' %}selected{% endif %}>Februari</option>
+          <option value="3" {% if bulan_selected == '3' %}selected{% endif %}>Maret</option>
+          <option value="4" {% if bulan_selected == '4' %}selected{% endif %}>April</option>
+          <option value="5" {% if bulan_selected == '5' %}selected{% endif %}>Mei</option>
+          <option value="6" {% if bulan_selected == '6' %}selected{% endif %}>Juni</option>
+          <option value="7" {% if bulan_selected == '7' %}selected{% endif %}>Juli</option>
+          <option value="8" {% if bulan_selected == '8' %}selected{% endif %}>Agustus</option>
+          <option value="9" {% if bulan_selected == '9' %}selected{% endif %}>September</option>
+          <option value="10" {% if bulan_selected == '10' %}selected{% endif %}>Oktober</option>
+          <option value="11" {% if bulan_selected == '11' %}selected{% endif %}>November</option>
+          <option value="12" {% if bulan_selected == '12' %}selected{% endif %}>Desember</option>
+        </select>
+      </div>
+
+      <!-- 4. FILTER JENIS TRANSAKSI -->
+      <div class="col-md-2">
+        <label class="form-label small fw-bold">Jenis Transaksi</label>
+        <select name="jenis" class="form-select form-select-sm">
+          <option value="">-- Semua Transaksi --</option>
+          <option value="CPNS" {% if jenis_filter == 'CPNS' %}selected{% endif %}>Pengangkatan CPNS</option>
+          <option value="PNS" {% if jenis_filter == 'PNS' %}selected{% endif %}>Pengangkatan PNS</option>
+          <option value="PPPK" {% if jenis_filter == 'PPPK' %}selected{% endif %}>Pengangkatan PPPK</option>
+          <option value="PENSIUN" {% if jenis_filter == 'PENSIUN' %}selected{% endif %}>Pensiun BUP</option>
+          <option value="MUTASI_MASUK" {% if jenis_filter == 'MUTASI_MASUK' %}selected{% endif %}>Mutasi Masuk</option>
+          <option value="MUTASI_KELUAR" {% if jenis_filter == 'MUTASI_KELUAR' %}selected{% endif %}>Mutasi Keluar</option>
+        </select>
+      </div>
+
+      <!-- 5. TOMBOL AKSI -->
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bx bx-filter-alt me-1"></i> Filter</button>
+        <a href="{% url 'laporan_kepegawaian' %}" class="btn btn-outline-secondary btn-sm" title="Reset Filter"><i class="bx bx-refresh"></i></a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= 6 KARTU RINGKASAN STATISTIK ================= -->
+<div class="row g-3 mb-4">
+  
+  <!-- 1. JUMLAH PEGAWAI & GENDER -->
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm border-start border-primary border-4">
+      <div class="card-body">
+        <h6 class="fw-bold text-muted uppercase mb-2"><i class="bx bx-group me-1"></i> Status & Gender Pegawai</h6>
+        <h3 class="fw-bold text-primary mb-3">{{ total_seluruh_pegawai }} <span class="fs-6 text-muted fw-normal">Pegawai Disaring</span></h3>
+        <table class="table table-sm table-borderless small mb-0">
+          <tr class="border-bottom">
+            <td><strong>PNS</strong></td>
+            <td>: {{ stat_pegawai.total_pns }} orang</td>
+            <td class="text-muted">(L: {{ stat_pegawai.pns_l }} | P: {{ stat_pegawai.pns_p }})</td>
+          </tr>
+          <tr class="border-bottom">
+            <td><strong>PPPK</strong></td>
+            <td>: {{ stat_pegawai.total_pppk }} orang</td>
+            <td class="text-muted">(L: {{ stat_pegawai.pppk_l }} | P: {{ stat_pegawai.pppk_p }})</td>
+          </tr>
+          <tr>
+            <td><strong>PPPK PW</strong></td>
+            <td>: {{ stat_pegawai.total_pppkpw }} orang</td>
+            <td class="text-muted">(L: {{ stat_pegawai.pppkpw_l }} | P: {{ stat_pegawai.pppkpw_p }})</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. KATEGORI JABATAN -->
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm border-start border-success border-4">
+      <div class="card-body">
+        <h6 class="fw-bold text-muted uppercase mb-2"><i class="bx bx-briefcase me-1"></i> Jenis Jabatan</h6>
+        <ul class="list-group list-group-flush small">
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1">
+            Struktural <span class="badge bg-success rounded-pill">{{ stat_jabatan.struktural }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1">
+            Fungsional <span class="badge bg-info rounded-pill">{{ stat_jabatan.fungsional }}</span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1">
+            Pelaksana <span class="badge bg-secondary rounded-pill">{{ stat_jabatan.pelaksana }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. RENTANG USIA -->
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm border-start border-warning border-4">
+      <div class="card-body">
+        <h6 class="fw-bold text-muted uppercase mb-2"><i class="bx bx-time me-1"></i> Demografi Rentang Usia</h6>
+        <div class="d-flex flex-wrap gap-1 mt-2">
+          <span class="badge bg-label-secondary">&lt;25 Thn: {{ stat_usia.u25 }}</span>
+          <span class="badge bg-label-primary">25-34 Thn: {{ stat_usia.u25_34 }}</span>
+          <span class="badge bg-label-info">35-44 Thn: {{ stat_usia.u35_44 }}</span>
+          <span class="badge bg-label-warning">45-54 Thn: {{ stat_usia.u45_54 }}</span>
+          <span class="badge bg-label-danger">&ge;55 Thn: {{ stat_usia.u55 }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. GOLONGAN / PANGKAT -->
+  <div class="col-md-6 col-lg-6">
+    <div class="card h-100 shadow-sm border-start border-info border-4">
+      <div class="card-body">
+        <h6 class="fw-bold text-muted uppercase mb-2"><i class="bx bx-layer me-1"></i> Sebaran Golongan / Pangkat</h6>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          {% for g in rekap_golongan %}
+            <span class="badge bg-light text-dark border">
+              {{ g.riwayat_pangkat__pangkat__golongan|default:"Belum Set" }}: <b>{{ g.jumlah }}</b>
+            </span>
+          {% empty %}
+            <small class="text-muted">Belum ada data golongan</small>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. TINGKAT PENDIDIKAN -->
+  <div class="col-md-6 col-lg-6">
+    <div class="card h-100 shadow-sm border-start border-danger border-4">
+      <div class="card-body">
+        <h6 class="fw-bold text-muted uppercase mb-2"><i class="bx bx-book-reader me-1"></i> Sebaran Pendidikan</h6>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          {% for p in rekap_pendidikan %}
+            <span class="badge bg-label-danger">
+              {{ p.riwayat_pendidikan__tingkat__kode|default:"Tanpa Data" }}: <b>{{ p.jumlah }}</b>
+            </span>
+          {% empty %}
+            <small class="text-muted">Belum ada data pendidikan</small>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= TABEL TRANSAKSI DETAIL DENGAN PAGINATION ================= -->
+<div class="card shadow-sm">
+  <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h6 class="fw-bold mb-0 text-dark"><i class="bx bx-list-ul me-1"></i> Rincian Riwayat SK Kepegawaian</h6>
+    <small class="text-muted">
+      Menampilkan {{ riwayat_list.start_index|default:0 }} - {{ riwayat_list.end_index|default:0 }} dari {{ riwayat_list.paginator.count|default:0 }} transaksi
+    </small>
+  </div>
+  <div class="table-responsive text-nowrap">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>No</th>
+          <th>Nama & NIP Pegawai</th>
+          <th>Jenis Transaksi</th>
+          <th>Nomor SK & Tgl</th>
+          <th>TMT</th>
+          <th>Keterangan</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in riwayat_list %}
+        <tr>
+          <!-- Nomor Urut Dinamis Berlanjut Antar Halaman -->
+          <td>{{ riwayat_list.start_index|add:forloop.counter0 }}</td>
+          <td><b>{{ r.pegawai.nama_dengan_gelar }}</b><br><small class="text-muted">NIP: {{ r.pegawai.nip }}</small></td>
+          <td><span class="badge bg-label-primary">{{ r.get_jenis_transaksi_display }}</span></td>
+          <td>{{ r.nomor_sk }}<br><small class="text-muted">{{ r.tanggal_sk|date:"d-m-Y" }}</small></td>
+          <td><span class="fw-bold">{{ r.tmt|date:"d-m-Y" }}</span></td>
+          <td>{{ r.keterangan|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">Tidak ada data riwayat transaksi sesuai filter yang dipilih.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- KONTROL PAGINASI BOTSTRAP -->
+  {% if riwayat_list.has_other_pages %}
+  <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <small class="text-muted">Halaman {{ riwayat_list.number }} dari {{ riwayat_list.paginator.num_pages }}</small>
+    
+    <ul class="pagination pagination-sm mb-0">
+      <!-- Tombol Prev -->
+      {% if riwayat_list.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ riwayat_list.previous_page_number }}&status_pegawai={{ status_pegawai }}&tahun={{ tahun_selected }}&bulan={{ bulan_selected }}&jenis={{ jenis_filter }}">
+            <i class="bx bx-chevron-left"></i>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="bx bx-chevron-left"></i></span></li>
+      {% endif %}
+
+      <!-- Nomor Halaman -->
+      {% for num in riwayat_list.paginator.page_range %}
+        {% if riwayat_list.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > riwayat_list.number|add:'-3' and num < riwayat_list.number|add:'3' %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}&status_pegawai={{ status_pegawai }}&tahun={{ tahun_selected }}&bulan={{ bulan_selected }}&jenis={{ jenis_filter }}">{{ num }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      <!-- Tombol Next -->
+      {% if riwayat_list.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ riwayat_list.next_page_number }}&status_pegawai={{ status_pegawai }}&tahun={{ tahun_selected }}&bulan={{ bulan_selected }}&jenis={{ jenis_filter }}">
+            <i class="bx bx-chevron-right"></i>
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="bx bx-chevron-right"></i></span></li>
+      {% endif %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

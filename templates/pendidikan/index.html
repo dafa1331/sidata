@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">{{ title }}</h5>
+    <a href="{% url 'tingkat_pendidikan_create' %}" class="btn btn-primary btn-sm">
+      <i class="bx bx-plus me-1"></i> Tambah Tingkat
+    </a>
+  </div>
+  <div class="table-responsive text-nowrap">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Urutan</th>
+          <th>Kode</th>
+          <th>Nama Tingkat Pendidikan</th>
+          <th>Status</th>
+          <th class="text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in data_list %}
+        <tr>
+          <td>{{ d.urutan }}</td>
+          <td><span class="badge bg-label-info">{{ d.kode }}</span></td>
+          <td><strong>{{ d.nama }}</strong></td>
+          <td>
+            {% if d.is_active %}
+              <span class="badge bg-label-success">Aktif</span>
+            {% else %}
+              <span class="badge bg-label-danger">Non-Aktif</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <a href="{% url 'tingkat_pendidikan_update' d.pk %}" class="btn btn-sm btn-outline-warning">
+              <i class="bx bx-edit-alt"></i>
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapus{{ d.pk }}">
+              <i class="bx bx-trash"></i>
+            </button>
+          </td>
+        </tr>
+
+        <!-- Modal Hapus -->
+        <div class="modal fade" id="modalHapus{{ d.pk }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              </div>
+              <form action="{% url 'tingkat_pendidikan_delete' d.pk %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body text-center py-4">
+                  Apakah Anda yakin ingin menghapus <strong>{{ d.nama }} ({{ d.kode }})</strong>?
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                  <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <tr><td colspan="5" class="text-center py-4">Belum ada data tingkat pendidikan.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
