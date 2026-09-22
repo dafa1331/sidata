@@ -29,7 +29,7 @@ def dashboard_view(request):
         total_asn=Count('id', distinct=True),
         pns=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi__in=['PNS', 'CPNS']), distinct=True),
         pppk=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi='PPPK'), distinct=True),
-        pppk_pw=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi='PPPK_PW'), distinct=True),
+        pppk_pw=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi='PPPKPW'), distinct=True),
         total_l=Count('id', filter=Q(jenis_kelamin='L'), distinct=True),
         total_p=Count('id', filter=Q(jenis_kelamin='P'), distinct=True),
     )
@@ -74,11 +74,11 @@ def dashboard_view(request):
         ),
         total_pppk_pw=Count(
             'riwayat_pegawai__pegawai', 
-            filter=Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPK_PW'), 
+            filter=Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPKPW'), 
             distinct=True
         ) + Count(
             'sub_units__riwayat_pegawai__pegawai', 
-            filter=Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPK_PW'), 
+            filter=Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPKPW'), 
             distinct=True
         ),
         total_pegawai=Count('riwayat_pegawai__pegawai', distinct=True) + Count('sub_units__riwayat_pegawai__pegawai', distinct=True)

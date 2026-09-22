@@ -17,17 +17,22 @@
   <!-- Header & Tombol Tambah -->
   <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <h5 class="mb-0">Master Data Jabatan</h5>
-    <div class="d-flex gap-2">
-        <!-- LINK TOMBOL IMPORT JABATAN -->
-        <a href="{% url 'jabatan_import' %}" class="btn btn-outline-primary btn-sm">
-          <i class="bx bx-upload me-1"></i> Import Jabatan
-        </a>
+    <div class="d-flex align-items-center gap-2">
+      <!-- TOMBOL EKSPOR EXCEL -->
+      <a href="{% url 'jabatan_export' %}{% if query %}?q={{ query }}{% endif %}" class="btn btn-outline-success btn-sm fw-semibold">
+        <i class="bx bx-download me-1"></i> Ekspor Excel
+      </a>
 
-        <!-- TOMBOL TAMBAH JABATAN INDIVIDU -->
-        <a href="{% url 'jabatan_create' %}" class="btn btn-primary btn-sm">
-          <i class="bx bx-plus me-1"></i> Tambah Jabatan
-        </a>
-      </div>
+      <!-- TOMBOL IMPORT JABATAN -->
+      <a href="{% url 'jabatan_import' %}" class="btn btn-outline-primary btn-sm fw-semibold">
+        <i class="bx bx-upload me-1"></i> Import Jabatan
+      </a>
+
+      <!-- TOMBOL TAMBAH JABATAN -->
+      <a href="{% url 'jabatan_create' %}" class="btn btn-primary btn-sm fw-semibold">
+        <i class="bx bx-plus me-1"></i> Tambah Jabatan
+      </a>
+    </div>
     </div>
   </div>
 

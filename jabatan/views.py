@@ -6,6 +6,7 @@ from django.db.models import ProtectedError
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import HttpResponse # <-- TAMBAHKAN IMPORT INI
 from .models import Jabatan, JenisJabatan, JenjangJabatan
 from .forms import JabatanCreateForm, JabatanUpdateForm, ImportJabatanForm
 
@@ -229,3 +230,50 @@ def jabatan_import(request):
         form = ImportJabatanForm()
 
     return render(request, 'jabatan/import_form.html', {'form': form, 'title': 'Import Master Jabatan'})
+
+@login_required
+def jabatan_export(request):
+    """
+    Fungsi untuk mengekspor data Jabatan ke file Excel (.xlsx)
+    Mendukung filter pencarian sesuai query search yang aktif.
+    """
+    query = request.GET.get('q', '').strip()
+    
+    # Fetch data jabatan beserta relasinya
+    jabatan_qs = Jabatan.objects.select_related('jenis', 'jenjang').all()
+
+    # Terapkan filter pencarian jika user sedang melakukan pencarian
+    if query:
+        jabatan_qs = jabatan_qs.filter(
+            Q(nama_jabatan__icontains=query) |
+            Q(jenis__nama__icontains=query) |
+            Q(jenjang__nama__icontains=query) |
+            Q(eselon__icontains=query)
+        )
+
+    # Buat list dictionary untuk dikonversi ke DataFrame
+    data = []
+    for idx, item in enumerate(jabatan_qs, start=1):
+        data.append({
+            'No': idx,
+            'Nama Jabatan': item.nama_jabatan,
+            'Jenis Jabatan': item.jenis.nama if item.jenis else '',
+            'Jenjang Jabatan': item.jenjang.nama if item.jenjang else '',
+            'Eselon': item.eselon or '',
+            'Status Aktif': 'Aktif' if item.is_active else 'Nonaktif',
+        })
+
+    # Konversi data ke Pandas DataFrame
+    df = pd.DataFrame(data)
+
+    # Buat Response HTTP dengan Content-Type khusus Excel
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="Data_Master_Jabatan.xlsx"'
+
+    # Tulis DataFrame ke Excel menggunakan engine openpyxl
+    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Master Jabatan')
+
+    return response

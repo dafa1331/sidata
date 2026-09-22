@@ -7,4 +7,5 @@ urlpatterns = [
     path('<int:pk>/edit/', views.jabatan_update, name='jabatan_update'),
     path('<int:pk>/hapus/', views.jabatan_delete, name='jabatan_delete'), # <-- Path Baru
     path('import/', views.jabatan_import, name='jabatan_import'),
+    path('export/', views.jabatan_export, name='jabatan_export'), # <-- TAMBAHKAN RUTE INI
 ]
