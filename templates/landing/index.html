@@ -80,32 +80,32 @@
     
     <!-- ================= FILTER PER OPD ================= -->
     <div class="card shadow-sm mb-4 border-0">
-    <div class="card-body bg-white p-3 rounded-3">
+      <div class="card-body bg-white p-3 rounded-3">
         <form method="get">
-        <label class="form-label small fw-bold text-primary mb-2">
+          <label class="form-label small fw-bold text-primary mb-2">
             <i class="bx bx-filter-alt me-1"></i> Filter Organisasi Perangkat Daerah (OPD):
-        </label>
-        <div class="row g-2 align-items-center">
+          </label>
+          <div class="row g-2 align-items-center">
             <!-- Select Box Filter -->
             <div class="col-md-9 col-sm-8">
-            <select name="opd" class="form-select border-primary" onchange="this.form.submit()">
+              <select name="opd" class="form-select border-primary" onchange="this.form.submit()">
                 <option value="">-- Seluruh OPD / Instansi --</option>
                 {% for opd in list_opd %}
-                <option value="{{ opd.id }}" {% if opd_selected == opd.id %}selected{% endif %}>
+                  <option value="{{ opd.id }}" {% if opd_selected == opd.id %}selected{% endif %}>
                     {{ opd }}
-                </option>
+                  </option>
                 {% endfor %}
-            </select>
+              </select>
             </div>
             <!-- Tombol Reset Filter -->
             <div class="col-md-3 col-sm-4">
-            <a href="{% url 'landing_index' %}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
+              <a href="{% url 'landing_index' %}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
                 <i class="bx bx-refresh fs-5 me-1"></i> Reset Filter
-            </a>
+              </a>
             </div>
-        </div>
+          </div>
         </form>
-    </div>
+      </div>
     </div>
 
     <!-- CARDS STATISTIK UTAMA -->
@@ -151,8 +151,8 @@
             </div>
             <div>
               <h6 class="text-muted fw-bold mb-1">PPPK PARUH WAKTU</h6>
-              <h3 class="fw-bold mb-0 text-dark">{{ stat_pegawai.total_pppkpw|default:0 }}</h3>
-              <small class="text-muted">L: {{ stat_pegawai.pppkpw_l|default:0 }} | P: {{ stat_pegawai.pppkpw_p|default:0 }}</small>
+              <h3 class="fw-bold mb-0 text-dark">{{ stat_pegawai.total_pppk_pw|default:0 }}</h3>
+              <small class="text-muted">L: {{ stat_pegawai.pppk_pw_l|default:0 }} | P: {{ stat_pegawai.pppk_pw_p|default:0 }}</small>
             </div>
           </div>
         </div>
@@ -198,7 +198,7 @@
       </div>
     </div>
 
-    <!-- TABEL REKAPITULASI DETAIL (DOKUMEN PDF) -->
+    <!-- TABEL REKAPITULASI DETAIL -->
     <div class="card border-0 shadow-sm mt-4">
       <div class="card-header bg-white border-bottom py-3">
         <ul class="nav nav-tabs card-header-tabs" id="rekapTab" role="tablist">
@@ -226,15 +226,15 @@
                 <td><strong>LAKI-LAKI</strong></td>
                 <td>{{ stat_pegawai.pns_l|default:0 }}</td>
                 <td>{{ stat_pegawai.pppk_l|default:0 }}</td>
-                <td>{{ stat_pegawai.pppkpw_l|default:0 }}</td>
-                <td class="fw-bold text-primary">{{ stat_pegawai.pns_l|add:stat_pegawai.pppk_l|add:stat_pegawai.pppkpw_l }}</td>
+                <td>{{ stat_pegawai.pppk_pw_l|default:0 }}</td>
+                <td class="fw-bold text-primary">{{ stat_pegawai.pns_l|add:stat_pegawai.pppk_l|add:stat_pegawai.pppk_pw_l }}</td>
               </tr>
               <tr>
                 <td><strong>PEREMPUAN</strong></td>
                 <td>{{ stat_pegawai.pns_p|default:0 }}</td>
                 <td>{{ stat_pegawai.pppk_p|default:0 }}</td>
-                <td>{{ stat_pegawai.pppkpw_p|default:0 }}</td>
-                <td class="fw-bold text-primary">{{ stat_pegawai.pns_p|add:stat_pegawai.pppk_p|add:stat_pegawai.pppkpw_p }}</td>
+                <td>{{ stat_pegawai.pppk_pw_p|default:0 }}</td>
+                <td class="fw-bold text-primary">{{ stat_pegawai.pns_p|add:stat_pegawai.pppk_p|add:stat_pegawai.pppk_pw_p }}</td>
               </tr>
             </tbody>
           </table>

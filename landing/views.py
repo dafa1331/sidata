@@ -30,7 +30,7 @@ def index(request):
         pegawai=OuterRef('pk')
     ).order_by('-tahun_lulus', '-id')
 
-    # Query Base Pegawai Aktif
+    # Query Base Pegawai Aktif (Status 'AKTIF' atau 'PPPK_PW')
     pegawai_qs = Pegawai.objects.filter(
         status_keaktifan__in=['AKTIF', 'PPPK_PW']
     ).annotate(
@@ -43,7 +43,6 @@ def index(request):
 
     # Filter OPD (Mendukung Unit Kerja Induk & Sub-Unitnya)
     if opd_id and opd_id.isdigit():
-        # Ambil ID unit kerja yang dipilih beserta ID anak-anaknya (parent = opd_id)
         opd_ids = list(
             UnitKerja.objects.filter(
                 Q(id=opd_id) | Q(parent_id=opd_id)
@@ -54,19 +53,24 @@ def index(request):
     # Total Pegawai Aktif
     total_pegawai = pegawai_qs.distinct().count()
 
+    # STATISTIK UTAMA (CARDS & TABEL GENDER)
+    # DIPERBAIKI: Menggunakan 'PPPK_PW' sesuai dengan nilai status_keaktifan di database
     # STATISTIK UTAMA (CARDS)
     stat_pegawai = pegawai_qs.aggregate(
+        # 1. PNS
         total_pns=Count('id', filter=Q(status_keaktifan='AKTIF') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
         pns_l=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='L') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
         pns_p=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='P') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
         
-        total_pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK')),
-        pppk_l=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='L', jenis_transaksi_terakhir__icontains='PPPK')),
-        pppk_p=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='P', jenis_transaksi_terakhir__icontains='PPPK')),
+        # 2. PPPK PENUH WAKTU (Memfilter PPPK biasa & mengecualikan Paruh Waktu / PPPK_PW)
+        total_pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
+        pppk_l=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='L', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
+        pppk_p=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='P', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
         
-        total_pppkpw=Count('id', filter=Q(status_keaktifan='PPPK_PW')),
-        pppkpw_l=Count('id', filter=Q(status_keaktifan='PPPK_PW', jenis_kelamin='L')),
-        pppkpw_p=Count('id', filter=Q(status_keaktifan='PPPK_PW', jenis_kelamin='P')),
+        # 3. PPPK PARUH WAKTU (Berdasarkan status keaktifan atau jenis transaksi PPPK_PW)
+        total_pppk_pw=Count('id', filter=Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')),
+        pppk_pw_l=Count('id', filter=(Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')) & Q(jenis_kelamin='L')),
+        pppk_pw_p=Count('id', filter=(Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')) & Q(jenis_kelamin='P')),
     )
 
     # STATISTIK JABATAN
@@ -119,21 +123,25 @@ def index(request):
     # REKAPITULASI DETAIL (AGAMA)
     rekap_agama = pegawai_qs.values('agama').annotate(
         pns=Count('id', filter=Q(status_keaktifan='AKTIF') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
-        pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK')),
-        pppk_pw=Count('id', filter=Q(status_keaktifan='PPPK_PW')),
+        pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
+        pppk_pw=Count('id', filter=Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')),
         total=Count('id')
     )
 
     # REKAPITULASI DETAIL (PENDIDIKAN)
     rekap_pendidikan = pegawai_qs.values('pendidikan_terakhir_nama').annotate(
         pns=Count('id', filter=Q(status_keaktifan='AKTIF') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
-        pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK')),
-        pppk_pw=Count('id', filter=Q(status_keaktifan='PPPK_PW')),
+        pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
+        pppk_pw=Count('id', filter=Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')),
         total=Count('id')
     ).order_by('-total')
 
-    # List OPD untuk Dropdown Filter
-    list_opd = UnitKerja.objects.filter(is_active=True).order_by('nama')
+    # List OPD untuk Dropdown Filter (Hanya Induk Utama / OPD & UPTD)
+    list_opd = UnitKerja.objects.filter(
+        is_active=True
+    ).filter(
+        Q(parent__isnull=True) | Q(jenis='UPTD')
+    ).order_by('nama')
 
     context = {
         'title': 'Portal Data & Statistik Kepegawaian',
