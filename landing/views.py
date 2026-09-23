@@ -1,4 +1,5 @@
 from datetime import date
+from dateutil.relativedelta import relativedelta
 from django.shortcuts import render
 from django.db.models import Count, Q, OuterRef, Subquery
 from django.db.models.functions import ExtractYear
@@ -24,8 +25,9 @@ def get_past_date(today, years):
 def index(request):
     opd_id = request.GET.get('opd', '')
     status_filter = request.GET.get('status', '').strip()
+    today = date.today()
     
-    # 1. Subquery SK Kepegawaian terbaru
+    # 1. Subquery SK Kepegawaian terbaru (Mendukung tmt_selesai untuk PPPK)
     kontrak_terakhir = RiwayatKepegawaian.objects.filter(
         pegawai=OuterRef('pk')
     ).order_by('-tmt', '-created_at')
@@ -51,6 +53,7 @@ def index(request):
     ).annotate(
         jenis_transaksi_terakhir=Subquery(kontrak_terakhir.values('jenis_transaksi')[:1]),
         tmt_sk=Subquery(kontrak_terakhir.values('tmt')[:1]),
+        tmt_selesai_terakhir=Subquery(kontrak_terakhir.values('tmt_selesai')[:1]),
         jenis_jabatan_terakhir=Subquery(jabatan_terakhir.values('jabatan__jenis__nama')[:1]),
         unit_kerja_id_terakhir=Subquery(jabatan_terakhir.values('unit_kerja_id')[:1]),
         pendidikan_terakhir_nama=Subquery(pendidikan_terakhir.values('tingkat__nama')[:1]),
@@ -109,7 +112,6 @@ def index(request):
     )
 
     # STATISTIK RENTANG USIA PEGAWAI
-    today = date.today()
     date_25 = get_past_date(today, 25)
     date_35 = get_past_date(today, 35)
     date_45 = get_past_date(today, 45)
@@ -123,14 +125,42 @@ def index(request):
         'u55': pegawai_qs.filter(tanggal_lahir__lte=date_55).count(),
     }
 
+    # PROYEKSI PENSIUN (PNS) & HABIS KONTRAK (PPPK/PW) 5 TAHUN KE DEPAN
+    tahun_now = today.year
+    list_tahun_proyeksi = list(range(tahun_now, tahun_now + 5))
+    chart_pensiun_data = []
+    chart_kontrak_data = []
+    rekap_proyeksi = []
+
+    # Filter terpisah PNS vs PPPK/PW
+    pns_qs = pegawai_qs.filter(status_keaktifan='AKTIF').exclude(jenis_transaksi_terakhir__icontains='PPPK')
+    pppk_qs = pegawai_qs.filter(Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PPPK'))
+
+    total_proyeksi_pensiun = 0
+    total_proyeksi_kontrak = 0
+
+    for thn in list_tahun_proyeksi:
+        # Pensiun PNS: Estimasi BUP 58 Tahun (Tahun Lahir + 58 = Tahun Proyeksi)
+        pensiun_cnt = pns_qs.filter(tanggal_lahir__year=thn - 58).count()
+        # Habis Kontrak PPPK: Berdasarkan ExtractYear dari tmt_selesai_terakhir
+        kontrak_cnt = pppk_qs.filter(tmt_selesai_terakhir__year=thn).count()
+
+        chart_pensiun_data.append(pensiun_cnt)
+        chart_kontrak_data.append(kontrak_cnt)
+
+        total_proyeksi_pensiun += pensiun_cnt
+        total_proyeksi_kontrak += kontrak_cnt
+
+        rekap_proyeksi.append({
+            'tahun': thn,
+            'pensiun_pns': pensiun_cnt,
+            'habis_kontrak_pppk': kontrak_cnt,
+            'total': pensiun_cnt + kontrak_cnt
+        })
+
     # GRAFIK TREN KENAIKAN PNS PER TAHUN
     pns_trend = RiwayatKepegawaian.objects.filter(jenis_transaksi='PNS')
     if opd_id and opd_id.isdigit():
-        opd_ids = list(
-            UnitKerja.objects.filter(
-                Q(id=opd_id) | Q(parent_id=opd_id)
-            ).values_list('id', flat=True)
-        )
         pns_trend = pns_trend.filter(
             pegawai__riwayat_jabatan__unit_kerja_id__in=opd_ids
         ).distinct()
@@ -160,8 +190,7 @@ def index(request):
         total=Count('id')
     ).order_by('-total')
 
-    # REKAPITULASI DETAIL & CHART (GOLONGAN / PANGKAT PER STATUS KEPEGAWAIAN)
-    # DIPERBAIKI: Memilah jumlah PNS, PPPK Penuh Waktu, dan PPPK Paruh Waktu per Golongan
+    # REKAPITULASI DETAIL & CHART (GOLONGAN / PANGKAT)
     rekap_golongan = pegawai_qs.values('golongan_terakhir').annotate(
         pns=Count('id', filter=Q(status_keaktifan='AKTIF') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
         pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
@@ -192,6 +221,12 @@ def index(request):
         'rekap_golongan': rekap_golongan,
         'chart_golongan_labels': chart_golongan_labels,
         'chart_golongan_data': chart_golongan_data,
+        'list_tahun_proyeksi': list_tahun_proyeksi,
+        'chart_pensiun_data': chart_pensiun_data,
+        'chart_kontrak_data': chart_kontrak_data,
+        'total_proyeksi_pensiun': total_proyeksi_pensiun,
+        'total_proyeksi_kontrak': total_proyeksi_kontrak,
+        'rekap_proyeksi': rekap_proyeksi,
         'list_opd': list_opd,
         'opd_selected': int(opd_id) if opd_id.isdigit() else '',
         'status_selected': status_filter,

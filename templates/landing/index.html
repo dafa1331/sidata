@@ -402,6 +402,58 @@
           </div>
         </div>
 
+        <!-- ROW D: KPI CARD AKUMULASI (TEPAT DI ATAS GRAFIK PROYEKSI) -->
+        <div class="row g-3 mb-3">
+          <!-- CARD PROYEKSI PENSIUN (5 TAHUN) -->
+          <div class="col-md-6">
+            <div class="kpi-card border-danger-subtle bg-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="kpi-title text-danger"><i class="bx bx-user-x me-1"></i> Total Estimasi Pensiun PNS (5 Tahun Ke Depan)</div>
+                  <div class="kpi-value text-danger fs-2 mt-1">{{ total_proyeksi_pensiun }} <span class="fs-6 text-muted font-normal">Orang</span></div>
+                  <div class="small text-muted mt-1">Akumulasi PNS memasuki Batas Usia Pensiun (BUP 58)</div>
+                </div>
+                <div class="p-3 rounded-circle bg-danger-subtle text-danger fs-1 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                  <i class="bx bx-user-x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD PROYEKSI HABIS KONTRAK (5 TAHUN) -->
+          <div class="col-md-6">
+            <div class="kpi-card border-warning-subtle bg-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="kpi-title text-warning"><i class="bx bx-calendar-exclamation me-1"></i> Total Habis Kontrak PPPK / PW (5 Tahun Ke Depan)</div>
+                  <div class="kpi-value text-warning fs-2 mt-1">{{ total_proyeksi_kontrak }} <span class="fs-6 text-muted font-normal">Orang</span></div>
+                  <div class="small text-muted mt-1">Akumulasi PPPK & Paruh Waktu selesai masa berlaku SK[cite: 1]</div>
+                </div>
+                <div class="p-3 rounded-circle bg-warning-subtle text-warning fs-1 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                  <i class="bx bx-calendar-exclamation"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW CHARTS D: PROYEKSI PENSIUN & HABIS KONTRAK 5 TAHUN KE DEPAN -->
+        <div class="row g-4 mb-4">
+          <div class="col-12">
+            <div class="dashboard-panel">
+              <div class="panel-title">
+                <span><i class="bx bx-calendar-exclamation text-danger me-2"></i>Proyeksi Pensiun PNS & Habis Kontrak PPPK (5 Tahun Ke Depan)</span>
+                <a href="{% url 'proyeksi_habis_kontrak' %}" class="btn btn-sm btn-outline-primary fw-semibold">
+                  Lihat Detail Proyeksi <i class="bx bx-right-arrow-alt"></i>
+                </a>
+              </div>
+              <div style="height: 270px; position: relative;">
+                <canvas id="chartProyeksi"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- TABEL REKAPITULASI DETAIL AGREGAT -->
         <div class="dashboard-panel p-0">
           <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-light rounded-top">
@@ -413,6 +465,7 @@
               <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-agama">2. Agama</button></li>
               <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pendidikan">3. Jenjang Pendidikan</button></li>
               <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-golongan">4. Golongan / Pangkat</button></li>
+              <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-proyeksi">5. Proyeksi Pensiun & Kontrak</button></li>
             </ul>
           </div>
 
@@ -652,6 +705,34 @@
               </div>
             </div>
 
+            <!-- TAB 5: TABEL REKAP PROYEKSI PENSIUN & HABIS KONTRAK -->
+            <div class="tab-pane fade" id="tab-proyeksi">
+              <div class="table-responsive">
+                <table class="table table-light-custom align-middle">
+                  <thead>
+                    <tr>
+                      <th>TAHUN PROYEKSI</th>
+                      <th class="text-center">ESTIMASI PENSIUN PNS (BUP 58)</th>
+                      <th class="text-center">HABIS MASA KONTRAK PPPK / PW</th>
+                      <th class="text-center">TOTAL PEGAWAI SIKLUS BERAKHIR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for row in rekap_proyeksi %}
+                    <tr>
+                      <td><strong>TAHUN {{ row.tahun }}</strong></td>
+                      <td class="text-center"><span class="badge badge-pns fs-7">{{ row.pensiun_pns }} Orang</span></td>
+                      <td class="text-center"><span class="badge badge-pppk fs-7">{{ row.habis_kontrak_pppk }} Orang</span></td>
+                      <td class="text-center fw-bold text-danger fs-6">{{ row.total }} Orang</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-3">Data proyeksi tidak ditemukan.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -668,10 +749,14 @@
   {{ chart_golongan_labels|json_script:"data-golongan-labels" }}
   {{ chart_golongan_data|json_script:"data-golongan-data" }}
 
+  <!-- DATA JSON UNTUK CHART PROYEKSI -->
+  {{ list_tahun_proyeksi|json_script:"data-tahun-proyeksi" }}
+  {{ chart_pensiun_data|json_script:"data-pensiun-data" }}
+  {{ chart_kontrak_data|json_script:"data-kontrak-data" }}
+
   <!-- SCRIPT CONFIG CHART.JS LIGHT THEME -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      // Set Default Global Chart.js Font & Colors
       Chart.defaults.color = '#64748b';
       Chart.defaults.font.family = "'Inter', sans-serif";
 
@@ -772,7 +857,7 @@
         });
       }
 
-      // 4. CHART GOLONGAN / PANGKAT BARU
+      // 4. CHART GOLONGAN / PANGKAT
       const elGolongan = document.getElementById('chartGolongan');
       if (elGolongan) {
         new Chart(elGolongan.getContext('2d'), {
@@ -790,6 +875,46 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false } },
+              y: { grid: { color: '#e2e8f0' }, beginAtZero: true }
+            }
+          }
+        });
+      }
+
+      // 5. CHART PROYEKSI PENSIUN & HABIS KONTRAK (5 TAHUN)
+      const tahunProyeksi = JSON.parse(document.getElementById('data-tahun-proyeksi').textContent || '[]');
+      const pensiunData = JSON.parse(document.getElementById('data-pensiun-data').textContent || '[]');
+      const kontrakData = JSON.parse(document.getElementById('data-kontrak-data').textContent || '[]');
+
+      const elProyeksi = document.getElementById('chartProyeksi');
+      if (elProyeksi) {
+        new Chart(elProyeksi.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: tahunProyeksi,
+            datasets: [
+              {
+                label: 'Estimasi Pensiun PNS (BUP 58)',
+                data: pensiunData,
+                backgroundColor: '#ef4444',
+                borderRadius: 6
+              },
+              {
+                label: 'Habis Masa Kontrak PPPK / PW',
+                data: kontrakData,
+                backgroundColor: '#f59e0b',
+                borderRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'top', labels: { boxWidth: 12, padding: 15 } }
+            },
             scales: {
               x: { grid: { display: false } },
               y: { grid: { color: '#e2e8f0' }, beginAtZero: true }
