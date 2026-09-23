@@ -7,13 +7,23 @@ from pegawai.models import (
     Pegawai, 
     RiwayatKepegawaian, 
     RiwayatJabatan, 
-    RiwayatPendidikan
+    RiwayatPendidikan,
+    RiwayatPangkat
 )
 from unit_kerja.models import UnitKerja
 
 
+def get_past_date(today, years):
+    """Fungsi pembantu menghitung tanggal X tahun lalu aman dari Leap Year"""
+    try:
+        return today.replace(year=today.year - years)
+    except ValueError:
+        return today.replace(month=2, day=28, year=today.year - years)
+
+
 def index(request):
     opd_id = request.GET.get('opd', '')
+    status_filter = request.GET.get('status', '').strip()
     
     # 1. Subquery SK Kepegawaian terbaru
     kontrak_terakhir = RiwayatKepegawaian.objects.filter(
@@ -30,7 +40,12 @@ def index(request):
         pegawai=OuterRef('pk')
     ).order_by('-tahun_lulus', '-id')
 
-    # Query Base Pegawai Aktif (Status 'AKTIF' atau 'PPPK_PW')
+    # 4. Subquery Riwayat Pangkat / Golongan Terbaru
+    pangkat_terakhir = RiwayatPangkat.objects.filter(
+        pegawai=OuterRef('pk')
+    ).order_by('-tmt_pangkat', '-created_at')
+
+    # Query Base Pegawai Aktif
     pegawai_qs = Pegawai.objects.filter(
         status_keaktifan__in=['AKTIF', 'PPPK_PW']
     ).annotate(
@@ -39,6 +54,7 @@ def index(request):
         jenis_jabatan_terakhir=Subquery(jabatan_terakhir.values('jabatan__jenis__nama')[:1]),
         unit_kerja_id_terakhir=Subquery(jabatan_terakhir.values('unit_kerja_id')[:1]),
         pendidikan_terakhir_nama=Subquery(pendidikan_terakhir.values('tingkat__nama')[:1]),
+        golongan_terakhir=Subquery(pangkat_terakhir.values('pangkat__nama_pangkat')[:1]),
     )
 
     # Filter OPD (Mendukung Unit Kerja Induk & Sub-Unitnya)
@@ -50,53 +66,61 @@ def index(request):
         )
         pegawai_qs = pegawai_qs.filter(unit_kerja_id_terakhir__in=opd_ids)
 
+    # Filter Status Kepegawaian (PNS / PPPK / PPPK_PW)
+    if status_filter == 'PNS':
+        pegawai_qs = pegawai_qs.filter(
+            status_keaktifan='AKTIF'
+        ).exclude(jenis_transaksi_terakhir__icontains='PPPK')
+    elif status_filter == 'PPPK':
+        pegawai_qs = pegawai_qs.filter(
+            status_keaktifan='AKTIF', 
+            jenis_transaksi_terakhir__icontains='PPPK'
+        ).exclude(
+            Q(jenis_transaksi_terakhir__icontains='PW') | Q(status_keaktifan='PPPK_PW')
+        )
+    elif status_filter == 'PPPK_PW':
+        pegawai_qs = pegawai_qs.filter(
+            Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')
+        )
+
     # Total Pegawai Aktif
     total_pegawai = pegawai_qs.distinct().count()
 
-    # STATISTIK UTAMA (CARDS & TABEL GENDER)
-    # DIPERBAIKI: Menggunakan 'PPPK_PW' sesuai dengan nilai status_keaktifan di database
-    # STATISTIK UTAMA (CARDS)
+    # STATISTIK UTAMA (CARDS KPI)
     stat_pegawai = pegawai_qs.aggregate(
-        # 1. PNS
         total_pns=Count('id', filter=Q(status_keaktifan='AKTIF') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
         pns_l=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='L') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
         pns_p=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='P') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
         
-        # 2. PPPK PENUH WAKTU (Memfilter PPPK biasa & mengecualikan Paruh Waktu / PPPK_PW)
         total_pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
         pppk_l=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='L', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
         pppk_p=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_kelamin='P', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
         
-        # 3. PPPK PARUH WAKTU (Berdasarkan status keaktifan atau jenis transaksi PPPK_PW)
         total_pppk_pw=Count('id', filter=Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')),
         pppk_pw_l=Count('id', filter=(Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')) & Q(jenis_kelamin='L')),
         pppk_pw_p=Count('id', filter=(Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')) & Q(jenis_kelamin='P')),
     )
 
-    # STATISTIK JABATAN
+    # STATISTIK KOMPOSISI JABATAN
     stat_jabatan = pegawai_qs.aggregate(
         struktural=Count('id', filter=Q(jenis_jabatan_terakhir__icontains='Struktural')),
         fungsional=Count('id', filter=Q(jenis_jabatan_terakhir__icontains='Fungsional')),
         pelaksana=Count('id', filter=Q(jenis_jabatan_terakhir__icontains='Pelaksana')),
     )
 
-    # STATISTIK RENTANG USIA
+    # STATISTIK RENTANG USIA PEGAWAI
     today = date.today()
+    date_25 = get_past_date(today, 25)
+    date_35 = get_past_date(today, 35)
+    date_45 = get_past_date(today, 45)
+    date_55 = get_past_date(today, 55)
+
     stat_usia = {
-        'u25': pegawai_qs.filter(tanggal_lahir__gt=today.replace(year=today.year - 25)).count(),
-        'u25_34': pegawai_qs.filter(
-            tanggal_lahir__lte=today.replace(year=today.year - 25),
-            tanggal_lahir__gt=today.replace(year=today.year - 35)
-        ).count(),
-        'u35_44': pegawai_qs.filter(
-            tanggal_lahir__lte=today.replace(year=today.year - 35),
-            tanggal_lahir__gt=today.replace(year=today.year - 45)
-        ).count(),
-        'u45_54': pegawai_qs.filter(
-            tanggal_lahir__lte=today.replace(year=today.year - 45),
-            tanggal_lahir__gt=today.replace(year=today.year - 55)
-        ).count(),
-        'u55': pegawai_qs.filter(tanggal_lahir__lte=today.replace(year=today.year - 55)).count(),
+        'u25': pegawai_qs.filter(tanggal_lahir__gt=date_25).count(),
+        'u25_34': pegawai_qs.filter(tanggal_lahir__lte=date_25, tanggal_lahir__gt=date_35).count(),
+        'u35_44': pegawai_qs.filter(tanggal_lahir__lte=date_35, tanggal_lahir__gt=date_45).count(),
+        'u45_54': pegawai_qs.filter(tanggal_lahir__lte=date_45, tanggal_lahir__gt=date_55).count(),
+        'u55': pegawai_qs.filter(tanggal_lahir__lte=date_55).count(),
     }
 
     # GRAFIK TREN KENAIKAN PNS PER TAHUN
@@ -136,7 +160,19 @@ def index(request):
         total=Count('id')
     ).order_by('-total')
 
-    # List OPD untuk Dropdown Filter (Hanya Induk Utama / OPD & UPTD)
+    # REKAPITULASI DETAIL & CHART (GOLONGAN / PANGKAT PER STATUS KEPEGAWAIAN)
+    # DIPERBAIKI: Memilah jumlah PNS, PPPK Penuh Waktu, dan PPPK Paruh Waktu per Golongan
+    rekap_golongan = pegawai_qs.values('golongan_terakhir').annotate(
+        pns=Count('id', filter=Q(status_keaktifan='AKTIF') & ~Q(jenis_transaksi_terakhir__icontains='PPPK')),
+        pppk=Count('id', filter=Q(status_keaktifan='AKTIF', jenis_transaksi_terakhir__icontains='PPPK') & ~Q(jenis_transaksi_terakhir__icontains='PW') & ~Q(status_keaktifan='PPPK_PW')),
+        pppk_pw=Count('id', filter=Q(status_keaktifan='PPPK_PW') | Q(jenis_transaksi_terakhir__icontains='PW')),
+        total=Count('id')
+    ).order_by('-golongan_terakhir')
+
+    chart_golongan_labels = [item['golongan_terakhir'] or 'Tanpa Golongan' for item in rekap_golongan]
+    chart_golongan_data = [item['total'] for item in rekap_golongan]
+
+    # List OPD untuk Dropdown Filter
     list_opd = UnitKerja.objects.filter(
         is_active=True
     ).filter(
@@ -153,8 +189,12 @@ def index(request):
         'chart_pns_count': chart_pns_count,
         'rekap_agama': rekap_agama,
         'rekap_pendidikan': rekap_pendidikan,
+        'rekap_golongan': rekap_golongan,
+        'chart_golongan_labels': chart_golongan_labels,
+        'chart_golongan_data': chart_golongan_data,
         'list_opd': list_opd,
         'opd_selected': int(opd_id) if opd_id.isdigit() else '',
+        'status_selected': status_filter,
         'today': today,
     }
     return render(request, 'landing/index.html', context)

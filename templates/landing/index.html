@@ -4,324 +4,683 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
-  <!-- Bootstrap 5 CSS -->
+  
+  <!-- Bootstrap 5.3 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Boxicons -->
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <!-- Font Google: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
+
   <style>
-    .hero-section {
-      background: linear-gradient(135deg, #0d6efd 0%, #0a4da6 100%);
-      color: white;
-      padding: 50px 0 70px 0;
+    :root {
+      --bg-light-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-sidebar: #ffffff;
+      --border-color: #e2e8f0;
+      --text-muted: #64748b;
+      --text-main: #1e293b;
+      --accent-blue: #0284c7;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-warning: #f59e0b;
     }
-    .stat-card {
-      border: none;
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light-main);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* TOP NAVBAR */
+    .top-navbar {
+      background-color: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      padding: 12px 24px;
+    }
+
+    /* SIDEBAR FILTER */
+    .sidebar-filter {
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      min-height: calc(100vh - 61px);
+      padding: 20px 16px;
+    }
+
+    .sidebar-filter .form-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-filter .form-select, .sidebar-filter .form-control {
+      background-color: #f1f5f9;
+      border-color: var(--border-color);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      border-radius: 6px;
+    }
+
+    .sidebar-filter .form-select:focus, .sidebar-filter .form-control:focus {
+      border-color: var(--accent-blue);
+      background-color: #ffffff;
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+    }
+
+    /* CARDS STATISTIK (KPI) */
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
-      transition: transform 0.2s ease-in-out;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .stat-card:hover {
-      transform: translateY(-5px);
+
+    .kpi-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
     }
-    .icon-wrapper {
-      width: 55px;
-      height: 55px;
-      border-radius: 50%;
+
+    .kpi-card .kpi-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .kpi-card .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-top: 4px;
+    }
+
+    .kpi-icon {
+      position: absolute;
+      right: 16px;
+      top: 18px;
+      font-size: 2.2rem;
+      opacity: 0.15;
+    }
+
+    /* DASHBOARD PANEL */
+    .dashboard-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 26px;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
     }
+
+    /* NAV TABS LIGHT */
+    .nav-tabs-light .nav-link {
+      color: var(--text-muted);
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin-right: 4px;
+      transition: all 0.2s;
+    }
+
+    .nav-tabs-light .nav-link.active {
+      background-color: #2563eb;
+      color: #ffffff;
+    }
+
+    .nav-tabs-light .nav-link:hover:not(.active) {
+      background-color: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    /* SUB-PILLS STYLING */
+    .nav-pills-sm .nav-link {
+      font-size: 0.78rem;
+      padding: 5px 12px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      background-color: #f1f5f9;
+      margin-right: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-pills-sm .nav-link.active {
+      background-color: #0284c7;
+      color: #ffffff;
+    }
+
+    /* TABLE STYLING LIGHT */
+    .table-light-custom {
+      color: var(--text-main);
+      font-size: 0.85rem;
+      margin-bottom: 0;
+    }
+
+    .table-light-custom th {
+      background-color: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--border-color);
+      padding: 12px;
+    }
+
+    .table-light-custom td {
+      border-color: var(--border-color);
+      padding: 12px;
+      vertical-align: middle;
+    }
+
+    .table-light-custom tbody tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* BADGES & CHIPS */
+    .badge-pns { background-color: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); }
+    .badge-pppk { background-color: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .badge-pw { background-color: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.25); }
   </style>
 </head>
-<body class="bg-light">
+<body>
 
-  <!-- NAVBAR TOP -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="#">
-        <i class="bx bx-buildings text-warning me-2"></i>SIMPEG / DASHBOARD ASN
-      </a>
-      <div class="ms-auto">
-        {% if user.is_authenticated %}
-          <a href="{% url 'pegawai_list' %}" class="btn btn-warning btn-sm fw-bold">
-            <i class="bx bx-dashboard me-1"></i> Dashboard Admin
-          </a>
-        {% else %}
-          <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm fw-bold">
-            <i class="bx bx-log-in me-1"></i> Login Sistem
-          </a>
-        {% endif %}
-      </div>
-    </div>
-  </nav>
-
-  <!-- HERO BANNER -->
-  <section class="hero-section text-center">
-    <div class="container">
-      <h2 class="fw-bold mb-2">PORTAL DATA & STATISTIK KEPEGAWAIAN</h2>
-      <p class="lead opacity-75 mb-4">Sistem Informasi Manajemen Kepegawaian & Transparansi Data ASN / PPPK</p>
-      
-      <!-- CARD TOTAL PEGAWAI HERO -->
-      <div class="d-inline-flex align-items-center bg-white text-dark rounded-pill px-4 py-2 shadow">
-        <i class="bx bx-group fs-2 text-primary me-3"></i>
-        <div class="text-start">
-          <div class="small text-muted fw-bold">TOTAL PEGAWAI AKTIF</div>
-          <div class="fs-4 fw-bold text-primary">{{ total_pegawai }} <span class="fs-6 text-muted">Orang</span></div>
+  <!-- TOP NAVBAR HASIL INTEGRASI -->
+  <header class="top-navbar d-flex align-items-center justify-content-between sticky-top">
+    <div class="d-flex align-items-center gap-3">
+      <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-5 text-white" href="#">
+        <div class="bg-primary text-white rounded p-1 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+          <i class="bx bx-buildings fs-5"></i>
         </div>
-      </div>
+        <span>PORTAL DATA & STATISTIK KEPEGAWAIAN</span>
+      </a>
     </div>
-  </section>
 
-  <!-- CONTAINER UTAMA -->
-  <div class="container my-5" style="margin-top: -40px !important;">
-    
-    <!-- ================= FILTER PER OPD ================= -->
-    <div class="card shadow-sm mb-4 border-0">
-      <div class="card-body bg-white p-3 rounded-3">
-        <form method="get">
-          <label class="form-label small fw-bold text-primary mb-2">
-            <i class="bx bx-filter-alt me-1"></i> Filter Organisasi Perangkat Daerah (OPD):
-          </label>
-          <div class="row g-2 align-items-center">
-            <!-- Select Box Filter -->
-            <div class="col-md-9 col-sm-8">
-              <select name="opd" class="form-select border-primary" onchange="this.form.submit()">
-                <option value="">-- Seluruh OPD / Instansi --</option>
-                {% for opd in list_opd %}
-                  <option value="{{ opd.id }}" {% if opd_selected == opd.id %}selected{% endif %}>
-                    {{ opd }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-            <!-- Tombol Reset Filter -->
-            <div class="col-md-3 col-sm-4">
-              <a href="{% url 'landing_index' %}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
-                <i class="bx bx-refresh fs-5 me-1"></i> Reset Filter
-              </a>
-            </div>
+    <!-- SEARCH & ADMIN NAV -->
+    <div class="d-flex align-items-center gap-3">
+      <div class="input-group input-group-sm d-none d-md-flex" style="width: 220px;">
+        <span class="input-group-text bg-dark border-secondary text-muted"><i class="bx bx-search"></i></span>
+        <input type="text" class="form-control bg-dark border-secondary text-white" placeholder="Cari NIP / Nama...">
+      </div>
+
+      {% if user.is_authenticated %}
+        <a href="{% url 'pegawai_list' %}" class="btn btn-warning btn-sm fw-bold d-flex align-items-center gap-1">
+          <i class="bx bx-dashboard"></i> Dashboard Admin
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm fw-semibold d-flex align-items-center gap-1">
+          <i class="bx bx-log-in"></i> Login Sistem
+        </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="container-fluid">
+    <div class="row">
+      
+      <!-- SIDEBAR FILTER (KIRI) -->
+      <aside class="col-lg-2 col-md-3 sidebar-filter">
+        <form method="get" id="filterForm">
+          <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <span class="fw-bold text-uppercase fs-7 text-primary"><i class="bx bx-filter-alt me-1"></i> Filter Presets</span>
+            <a href="{% url 'landing_index' %}" class="text-muted text-decoration-none small hover-primary" title="Reset Filter">
+              <i class="bx bx-refresh fs-5"></i>
+            </a>
+          </div>
+
+          <!-- FILTER OPD -->
+          <div class="mb-3">
+            <label class="form-label">Organisasi (OPD)</label>
+            <select name="opd" class="form-select" onchange="this.form.submit()">
+              <option value="">-- Seluruh OPD / Instansi --</option>
+              {% for opd in list_opd %}
+                <option value="{{ opd.id }}" {% if opd_selected == opd.id %}selected{% endif %}>
+                  {{ opd }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- FILTER STATUS KEPEGAWAIAN (DAPAT DIKLIK) -->
+          <div class="mb-3">
+            <label class="form-label">Status Kepegawaian</label>
+            <select name="status" class="form-select" onchange="this.form.submit()">
+              <option value="">Semua (PNS, PPPK, PW)</option>
+              <option value="PNS" {% if status_selected == 'PNS' %}selected{% endif %}>PNS</option>
+              <option value="PPPK" {% if status_selected == 'PPPK' %}selected{% endif %}>PPPK (Penuh Waktu)</option>
+              <option value="PPPK_PW" {% if status_selected == 'PPPK_PW' %}selected{% endif %}>PPPK Paruh Waktu</option>
+            </select>
+          </div>
+
+          <!-- FILTER TAHUN -->
+          <div class="mb-3">
+            <label class="form-label">Tahun Data</label>
+            <select class="form-select">
+              <option>{{ today|date:"Y" }} (Terbaru)</option>
+            </select>
+          </div>
+
+          <div class="mt-4 pt-3 border-top">
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold mb-2">
+              <i class="bx bx-check me-1"></i> Terapkan Filter
+            </button>
+            <a href="{% url 'landing_index' %}" class="btn btn-outline-secondary btn-sm w-100">
+              Reset Pilihan
+            </a>
           </div>
         </form>
-      </div>
+
+        <div class="mt-5 text-muted small text-center opacity-75">
+          SIMPEG Analytics v2.6<br>&copy; {{ today|date:"Y" }} BKPSDM
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT AREA (KANAN) -->
+      <main class="col-lg-10 col-md-9 p-4">
+
+        <!-- RINGKASAN KPI METRIC (TOP CARDS) -->
+        <div class="row g-3 mb-4">
+          <!-- TOTAL PEGAWAI -->
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-title">Total Pegawai Aktif</div>
+              <div class="kpi-value text-primary">{{ total_pegawai }} <span class="fs-6 text-muted font-normal">Orang</span></div>
+              <div class="small text-success mt-1"><i class="bx bx-check-circle me-1"></i> Terverifikasi Sistem</div>
+              <i class="bx bx-group kpi-icon text-primary"></i>
+            </div>
+          </div>
+
+          <!-- TOTAL PNS -->
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-title">PNS (Pegawai Negeri Sipil)</div>
+              <div class="kpi-value text-dark">{{ stat_pegawai.total_pns|default:0 }}</div>
+              <div class="small text-muted mt-1">L: <span class="fw-bold text-dark">{{ stat_pegawai.pns_l|default:0 }}</span> | P: <span class="fw-bold text-dark">{{ stat_pegawai.pns_p|default:0 }}</span></div>
+              <i class="bx bx-user-check kpi-icon text-info"></i>
+            </div>
+          </div>
+
+          <!-- TOTAL PPPK PENUH WAKTU -->
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-title">PPPK (Penuh Waktu)</div>
+              <div class="kpi-value text-success">{{ stat_pegawai.total_pppk|default:0 }}</div>
+              <div class="small text-muted mt-1">L: <span class="fw-bold text-dark">{{ stat_pegawai.pppk_l|default:0 }}</span> | P: <span class="fw-bold text-dark">{{ stat_pegawai.pppk_p|default:0 }}</span></div>
+              <i class="bx bx-briefcase kpi-icon text-success"></i>
+            </div>
+          </div>
+
+          <!-- TOTAL PPPK PARUH WAKTU -->
+          <div class="col-xl-3 col-md-6">
+            <div class="kpi-card">
+              <div class="kpi-title">PPPK Paruh Waktu</div>
+              <div class="kpi-value text-warning">{{ stat_pegawai.total_pppk_pw|default:0 }}</div>
+              <div class="small text-muted mt-1">L: <span class="fw-bold text-dark">{{ stat_pegawai.pppk_pw_l|default:0 }}</span> | P: <span class="fw-bold text-dark">{{ stat_pegawai.pppk_pw_p|default:0 }}</span></div>
+              <i class="bx bx-time-five kpi-icon text-warning"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW CHARTS A: TREN PENGANGKATAN PNS -->
+        <div class="row g-4 mb-4">
+          <div class="col-12">
+            <div class="dashboard-panel">
+              <div class="panel-title">
+                <span><i class="bx bx-line-chart text-primary me-2"></i>Statistik Kenaikan & Pengangkatan PNS per Tahun</span>
+                <span class="badge bg-light border text-muted">Data Historis</span>
+              </div>
+              <div style="height: 290px; position: relative;">
+                <canvas id="chartTrendPNS"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW CHARTS B: KOMPOSISI JABATAN & DISTRIBUSI USIA -->
+        <div class="row g-4 mb-4">
+          <!-- JABATAN -->
+          <div class="col-lg-6">
+            <div class="dashboard-panel h-100">
+              <div class="panel-title">
+                <span><i class="bx bx-pie-chart-alt-2 text-primary me-2"></i>Komposisi Jenis Jabatan</span>
+              </div>
+              <div class="d-flex align-items-center" style="height: 240px;">
+                <canvas id="chartJabatan"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- USIA -->
+          <div class="col-lg-6">
+            <div class="dashboard-panel h-100">
+              <div class="panel-title">
+                <span><i class="bx bx-bar-chart-alt-2 text-success me-2"></i>Distribusi Usia Pegawai</span>
+              </div>
+              <div style="height: 240px; position: relative;">
+                <canvas id="chartUsia"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW CHARTS C: STATISTIK GOLONGAN / PANGKAT BARU -->
+        <div class="row g-4 mb-4">
+          <div class="col-12">
+            <div class="dashboard-panel">
+              <div class="panel-title">
+                <span><i class="bx bx-award text-warning me-2"></i>Distribusi Pegawai Berdasarkan Golongan / Pangkat</span>
+              </div>
+              <div style="height: 260px; position: relative;">
+                <canvas id="chartGolongan"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABEL REKAPITULASI DETAIL AGREGAT -->
+        <div class="dashboard-panel p-0">
+          <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-light rounded-top">
+            <h6 class="m-0 fw-bold text-dark"><i class="bx bx-table text-primary me-2"></i>Ringkasan Agregat & Detail Kepegawaian</h6>
+            
+            <!-- NAV TABS UTAMA -->
+            <ul class="nav nav-tabs-light nav" id="rekapTab" role="tablist">
+              <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-gender">1. Jenis Kelamin</button></li>
+              <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-agama">2. Agama</button></li>
+              <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pendidikan">3. Jenjang Pendidikan</button></li>
+              <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-golongan">4. Golongan / Pangkat</button></li>
+            </ul>
+          </div>
+
+          <div class="tab-content p-3">
+            <!-- TAB 1: GENDER -->
+            <div class="tab-pane fade show active" id="tab-gender">
+              <div class="table-responsive">
+                <table class="table table-light-custom align-middle">
+                  <thead>
+                    <tr>
+                      <th>JENIS KELAMIN</th>
+                      <th class="text-center">PNS</th>
+                      <th class="text-center">PPPK (PENUH WAKTU)</th>
+                      <th class="text-center">PPPK PARUH WAKTU</th>
+                      <th class="text-center">TOTAL PEGAWAI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><i class="bx bx-male text-primary me-2 fs-5"></i><strong>LAKI-LAKI</strong></td>
+                      <td class="text-center"><span class="badge badge-pns fs-7">{{ stat_pegawai.pns_l|default:0 }}</span></td>
+                      <td class="text-center"><span class="badge badge-pppk fs-7">{{ stat_pegawai.pppk_l|default:0 }}</span></td>
+                      <td class="text-center"><span class="badge badge-pw fs-7">{{ stat_pegawai.pppk_pw_l|default:0 }}</span></td>
+                      <td class="text-center fw-bold text-primary fs-6">{{ stat_pegawai.pns_l|add:stat_pegawai.pppk_l|add:stat_pegawai.pppk_pw_l }}</td>
+                    </tr>
+                    <tr>
+                      <td><i class="bx bx-female text-danger me-2 fs-5"></i><strong>PEREMPUAN</strong></td>
+                      <td class="text-center"><span class="badge badge-pns fs-7">{{ stat_pegawai.pns_p|default:0 }}</span></td>
+                      <td class="text-center"><span class="badge badge-pppk fs-7">{{ stat_pegawai.pppk_p|default:0 }}</span></td>
+                      <td class="text-center"><span class="badge badge-pw fs-7">{{ stat_pegawai.pppk_pw_p|default:0 }}</span></td>
+                      <td class="text-center fw-bold text-primary fs-6">{{ stat_pegawai.pns_p|add:stat_pegawai.pppk_p|add:stat_pegawai.pppk_pw_p }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TAB 2: AGAMA -->
+            <div class="tab-pane fade" id="tab-agama">
+              <div class="table-responsive">
+                <table class="table table-light-custom align-middle">
+                  <thead>
+                    <tr>
+                      <th>AGAMA</th>
+                      <th class="text-center">PNS</th>
+                      <th class="text-center">PPPK (PENUH WAKTU)</th>
+                      <th class="text-center">PPPK PARUH WAKTU</th>
+                      <th class="text-center">TOTAL AGREGAT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for a in rekap_agama %}
+                    <tr>
+                      <td><strong>{{ a.agama|default:"TIDAK TERDATAT" }}</strong></td>
+                      <td class="text-center">{{ a.pns|default:0 }}</td>
+                      <td class="text-center">{{ a.pppk|default:0 }}</td>
+                      <td class="text-center">{{ a.pppk_pw|default:0 }}</td>
+                      <td class="text-center fw-bold text-primary">{{ a.total|default:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-3">Data tidak ditemukan.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TAB 3: PENDIDIKAN -->
+            <div class="tab-pane fade" id="tab-pendidikan">
+              <div class="table-responsive">
+                <table class="table table-light-custom align-middle">
+                  <thead>
+                    <tr>
+                      <th>JENJANG PENDIDIKAN</th>
+                      <th class="text-center">PNS</th>
+                      <th class="text-center">PPPK (PENUH WAKTU)</th>
+                      <th class="text-center">PPPK PARUH WAKTU</th>
+                      <th class="text-center">TOTAL PEGAWAI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for p in rekap_pendidikan %}
+                    <tr>
+                      <td><strong>{{ p.pendidikan_terakhir_nama|default:"TIDAK TERDATAT" }}</strong></td>
+                      <td class="text-center">{{ p.pns|default:0 }}</td>
+                      <td class="text-center">{{ p.pppk|default:0 }}</td>
+                      <td class="text-center">{{ p.pppk_pw|default:0 }}</td>
+                      <td class="text-center fw-bold text-primary">{{ p.total|default:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-3">Data tidak ditemukan.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TAB 4: GOLONGAN / PANGKAT DENGAN SUB-TAB STATUS KEPEGAWAIAN -->
+            <div class="tab-pane fade" id="tab-golongan">
+              <!-- SUB-NAV PILLS -->
+              <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <ul class="nav nav-pills nav-pills-sm" id="golonganPills" role="tablist">
+                  <li class="nav-item">
+                    <button class="nav-link active fw-semibold" data-bs-toggle="pill" data-bs-target="#gol-semua">
+                      Semua Pegawai
+                    </button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="nav-link fw-semibold" data-bs-toggle="pill" data-bs-target="#gol-pns">
+                      PNS
+                    </button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="nav-link fw-semibold" data-bs-toggle="pill" data-bs-target="#gol-pppk">
+                      PPPK (Penuh Waktu)
+                    </button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="nav-link fw-semibold" data-bs-toggle="pill" data-bs-target="#gol-pw">
+                      PPPK Paruh Waktu
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- CONTENT SUB-TABS -->
+              <div class="tab-content" id="golonganPillsContent">
+                
+                <!-- SUB-TAB 1: SEMUA PEGAWAI -->
+                <div class="tab-pane fade show active" id="gol-semua">
+                  <div class="table-responsive">
+                    <table class="table table-light-custom align-middle">
+                      <thead>
+                        <tr>
+                          <th>GOLONGAN / PANGKAT</th>
+                          <th class="text-center">PNS</th>
+                          <th class="text-center">PPPK (PENUH WAKTU)</th>
+                          <th class="text-center">PPPK PARUH WAKTU</th>
+                          <th class="text-center">TOTAL PEGAWAI</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for g in rekap_golongan %}
+                        <tr>
+                          <td><strong>{{ g.golongan_terakhir|default:"TIDAK TERDATAT / NON-GOLONGAN" }}</strong></td>
+                          <td class="text-center"><span class="badge badge-pns fs-7">{{ g.pns|default:0 }}</span></td>
+                          <td class="text-center"><span class="badge badge-pppk fs-7">{{ g.pppk|default:0 }}</span></td>
+                          <td class="text-center"><span class="badge badge-pw fs-7">{{ g.pppk_pw|default:0 }}</span></td>
+                          <td class="text-center fw-bold text-primary">{{ g.total|default:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">Data tidak ditemukan.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- SUB-TAB 2: PNS -->
+                <div class="tab-pane fade" id="gol-pns">
+                  <div class="table-responsive">
+                    <table class="table table-light-custom align-middle">
+                      <thead>
+                        <tr>
+                          <th>GOLONGAN / PANGKAT (PNS)</th>
+                          <th class="text-center">JUMLAH PNS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for g in rekap_golongan %}
+                        {% if g.pns > 0 %}
+                        <tr>
+                          <td><strong>{{ g.golongan_terakhir|default:"TIDAK TERDATAT" }}</strong></td>
+                          <td class="text-center fw-bold text-primary">{{ g.pns }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">Data PNS tidak ditemukan.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- SUB-TAB 3: PPPK PENUH WAKTU -->
+                <div class="tab-pane fade" id="gol-pppk">
+                  <div class="table-responsive">
+                    <table class="table table-light-custom align-middle">
+                      <thead>
+                        <tr>
+                          <th>GOLONGAN / PANGKAT (PPPK)</th>
+                          <th class="text-center">JUMLAH PPPK</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for g in rekap_golongan %}
+                        {% if g.pppk > 0 %}
+                        <tr>
+                          <td><strong>{{ g.golongan_terakhir|default:"TIDAK TERDATAT" }}</strong></td>
+                          <td class="text-center fw-bold text-success">{{ g.pppk }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">Data PPPK tidak ditemukan.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- SUB-TAB 4: PPPK PARUH WAKTU -->
+                <div class="tab-pane fade" id="gol-pw">
+                  <div class="table-responsive">
+                    <table class="table table-light-custom align-middle">
+                      <thead>
+                        <tr>
+                          <th>GOLONGAN / PANGKAT (PARUH WAKTU)</th>
+                          <th class="text-center">JUMLAH PPPK PW</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for g in rekap_golongan %}
+                        {% if g.pppk_pw > 0 %}
+                        <tr>
+                          <td><strong>{{ g.golongan_terakhir|default:"TIDAK TERDATAT" }}</strong></td>
+                          <td class="text-center fw-bold" style="color: #7c3aed;">{{ g.pppk_pw }}</td>
+                        </tr>
+                        {% endif %}
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">Data PPPK Paruh Waktu tidak ditemukan.</td></tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
     </div>
-
-    <!-- CARDS STATISTIK UTAMA -->
-    <div class="row g-4">
-      <!-- PNS -->
-      <div class="col-md-4">
-        <div class="card stat-card shadow-sm h-100">
-          <div class="card-body d-flex align-items-center p-4">
-            <div class="icon-wrapper bg-primary-subtle text-primary me-3">
-              <i class="bx bx-user-check"></i>
-            </div>
-            <div>
-              <h6 class="text-muted fw-bold mb-1">PNS (PEGAWAI NEGERI SIPIL)</h6>
-              <h3 class="fw-bold mb-0 text-dark">{{ stat_pegawai.total_pns|default:0 }}</h3>
-              <small class="text-muted">L: {{ stat_pegawai.pns_l|default:0 }} | P: {{ stat_pegawai.pns_p|default:0 }}</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PPPK -->
-      <div class="col-md-4">
-        <div class="card stat-card shadow-sm h-100">
-          <div class="card-body d-flex align-items-center p-4">
-            <div class="icon-wrapper bg-success-subtle text-success me-3">
-              <i class="bx bx-briefcase"></i>
-            </div>
-            <div>
-              <h6 class="text-muted fw-bold mb-1">PPPK (PENUH WAKTU)</h6>
-              <h3 class="fw-bold mb-0 text-dark">{{ stat_pegawai.total_pppk|default:0 }}</h3>
-              <small class="text-muted">L: {{ stat_pegawai.pppk_l|default:0 }} | P: {{ stat_pegawai.pppk_p|default:0 }}</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PPPK PARUH WAKTU -->
-      <div class="col-md-4">
-        <div class="card stat-card shadow-sm h-100">
-          <div class="card-body d-flex align-items-center p-4">
-            <div class="icon-wrapper bg-info-subtle text-info me-3">
-              <i class="bx bx-time-five"></i>
-            </div>
-            <div>
-              <h6 class="text-muted fw-bold mb-1">PPPK PARUH WAKTU</h6>
-              <h3 class="fw-bold mb-0 text-dark">{{ stat_pegawai.total_pppk_pw|default:0 }}</h3>
-              <small class="text-muted">L: {{ stat_pegawai.pppk_pw_l|default:0 }} | P: {{ stat_pegawai.pppk_pw_p|default:0 }}</small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- GRAFIK TREN KENAIKAN PNS PER TAHUN -->
-    <div class="row mt-4">
-      <div class="col-12">
-        <div class="card border-0 shadow-sm p-4">
-          <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary">
-            <i class="bx bx-line-chart me-2"></i>Statistik Kenaikan & Pengangkatan PNS per Tahun
-          </h5>
-          <div style="height: 280px; position: relative;">
-            <canvas id="chartTrendPNS"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VISUALISASI CHART JABATAN & USIA -->
-    <div class="row g-4 mt-1">
-      <div class="col-md-6">
-        <div class="card border-0 shadow-sm p-4 h-100">
-          <h5 class="fw-bold mb-3 border-bottom pb-2">
-            <i class="bx bx-pie-chart-alt-2 text-primary me-2"></i>Komposisi Jenis Jabatan
-          </h5>
-          <div style="height: 250px; position: relative;">
-            <canvas id="chartJabatan"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="card border-0 shadow-sm p-4 h-100">
-          <h5 class="fw-bold mb-3 border-bottom pb-2">
-            <i class="bx bx-bar-chart-alt-2 text-success me-2"></i>Distribusi Usia Pegawai
-          </h5>
-          <div style="height: 250px; position: relative;">
-            <canvas id="chartUsia"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TABEL REKAPITULASI DETAIL -->
-    <div class="card border-0 shadow-sm mt-4">
-      <div class="card-header bg-white border-bottom py-3">
-        <ul class="nav nav-tabs card-header-tabs" id="rekapTab" role="tablist">
-          <li class="nav-item"><button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tab-gender">1. Jenis Kelamin</button></li>
-          <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tab-agama">2. Agama</button></li>
-          <li class="nav-item"><button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tab-pendidikan">3. Jenjang Pendidikan</button></li>
-        </ul>
-      </div>
-      <div class="card-body tab-content">
-        
-        <!-- TAB 1: GENDER -->
-        <div class="tab-pane fade show active" id="tab-gender">
-          <table class="table table-bordered table-hover text-center align-middle mb-0">
-            <thead class="table-dark">
-              <tr>
-                <th>JENIS KELAMIN</th>
-                <th>PNS</th>
-                <th>PPPK</th>
-                <th>PPPK PARUH WAKTU</th>
-                <th>TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>LAKI-LAKI</strong></td>
-                <td>{{ stat_pegawai.pns_l|default:0 }}</td>
-                <td>{{ stat_pegawai.pppk_l|default:0 }}</td>
-                <td>{{ stat_pegawai.pppk_pw_l|default:0 }}</td>
-                <td class="fw-bold text-primary">{{ stat_pegawai.pns_l|add:stat_pegawai.pppk_l|add:stat_pegawai.pppk_pw_l }}</td>
-              </tr>
-              <tr>
-                <td><strong>PEREMPUAN</strong></td>
-                <td>{{ stat_pegawai.pns_p|default:0 }}</td>
-                <td>{{ stat_pegawai.pppk_p|default:0 }}</td>
-                <td>{{ stat_pegawai.pppk_pw_p|default:0 }}</td>
-                <td class="fw-bold text-primary">{{ stat_pegawai.pns_p|add:stat_pegawai.pppk_p|add:stat_pegawai.pppk_pw_p }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- TAB 2: AGAMA -->
-        <div class="tab-pane fade" id="tab-agama">
-          <table class="table table-bordered table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>AGAMA</th>
-                <th class="text-center">PNS</th>
-                <th class="text-center">PPPK</th>
-                <th class="text-center">PPPK PARUH WAKTU</th>
-                <th class="text-center">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for a in rekap_agama %}
-              <tr>
-                <td><strong>{{ a.agama|default:"TIDAK TERDATAT" }}</strong></td>
-                <td class="text-center">{{ a.pns|default:0 }}</td>
-                <td class="text-center">{{ a.pppk|default:0 }}</td>
-                <td class="text-center">{{ a.pppk_pw|default:0 }}</td>
-                <td class="text-center fw-bold">{{ a.total|default:0 }}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="5" class="text-center text-muted py-3">Tidak ada data.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- TAB 3: PENDIDIKAN -->
-        <div class="tab-pane fade" id="tab-pendidikan">
-          <table class="table table-striped align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>JENJANG PENDIDIKAN</th>
-                <th class="text-center">PNS</th>
-                <th class="text-center">PPPK</th>
-                <th class="text-center">PPPK PARUH WAKTU</th>
-                <th class="text-center">TOTAL PEGAWAI</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for p in rekap_pendidikan %}
-              <tr>
-                <td><strong>{{ p.pendidikan_terakhir_nama|default:"TIDAK TERDATAT" }}</strong></td>
-                <td class="text-center">{{ p.pns|default:0 }}</td>
-                <td class="text-center">{{ p.pppk|default:0 }}</td>
-                <td class="text-center">{{ p.pppk_pw|default:0 }}</td>
-                <td class="text-center fw-bold">{{ p.total|default:0 }}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="5" class="text-center text-muted py-3">Tidak ada data.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-    </div>
-
   </div>
 
-  <footer class="bg-dark text-white py-4 text-center mt-5">
-    <div class="container small">
-      &copy; {{ today|date:"Y" }} SIMPEG Dashboard ASN. All Rights Reserved.
-    </div>
-  </footer>
-
-  <!-- JS BOOTSTRAP -->
+  <!-- SCRIPT BOOTSTRAP -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- DOKUMEN DATA JSON AMAN DARI FILTER VS CODE -->
+  <!-- DATA JSON AMAN DARI DJANGO -->
   {{ chart_tahun|json_script:"data-chart-tahun" }}
   {{ chart_pns_count|json_script:"data-chart-pns" }}
+  {{ chart_golongan_labels|json_script:"data-golongan-labels" }}
+  {{ chart_golongan_data|json_script:"data-golongan-data" }}
 
-  <!-- SCRIPT CHARTS -->
+  <!-- SCRIPT CONFIG CHART.JS LIGHT THEME -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      // Parse Data JSON dari Django
+      // Set Default Global Chart.js Font & Colors
+      Chart.defaults.color = '#64748b';
+      Chart.defaults.font.family = "'Inter', sans-serif";
+
       const chartTahun = JSON.parse(document.getElementById('data-chart-tahun').textContent || '[]');
       const chartPNSCount = JSON.parse(document.getElementById('data-chart-pns').textContent || '[]');
+      const golonganLabels = JSON.parse(document.getElementById('data-golongan-labels').textContent || '[]');
+      const golonganData = JSON.parse(document.getElementById('data-golongan-data').textContent || '[]');
 
-      // 1. Chart Kenaikan PNS per Tahun
+      // 1. CHART TREN PNS (LINE CHART LIGHT)
       const elTrendPNS = document.getElementById('chartTrendPNS');
       if (elTrendPNS) {
         new Chart(elTrendPNS.getContext('2d'), {
@@ -331,23 +690,28 @@
             datasets: [{
               label: 'Jumlah Pengangkatan PNS',
               data: chartPNSCount,
-              borderColor: '#0d6efd',
-              backgroundColor: 'rgba(13, 110, 253, 0.1)',
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.08)',
+              borderWidth: 2,
               fill: true,
-              tension: 0.3,
-              pointRadius: 5
+              tension: 0.35,
+              pointBackgroundColor: '#0284c7',
+              pointHoverRadius: 6
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: true, position: 'top' } },
-            scales: { y: { beginAtZero: true } }
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: '#e2e8f0' } },
+              y: { grid: { color: '#e2e8f0' }, beginAtZero: true }
+            }
           }
         });
       }
 
-      // 2. Chart Jenis Jabatan
+      // 2. CHART JABATAN (DONUT LIGHT)
       const elJabatan = document.getElementById('chartJabatan');
       if (elJabatan) {
         new Chart(elJabatan.getContext('2d'), {
@@ -360,14 +724,23 @@
                 Number("{{ stat_jabatan.fungsional|default:0 }}"),
                 Number("{{ stat_jabatan.pelaksana|default:0 }}")
               ],
-              backgroundColor: ['#0d6efd', '#198754', '#ffc107']
+              backgroundColor: ['#0284c7', '#10b981', '#f59e0b'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
             }]
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'right', labels: { boxWidth: 12, padding: 15 } }
+            },
+            cutout: '70%'
+          }
         });
       }
 
-      // 3. Chart Rentang Usia
+      // 3. CHART RENTANG USIA (BAR CHART LIGHT)
       const elUsia = document.getElementById('chartUsia');
       if (elUsia) {
         new Chart(elUsia.getContext('2d'), {
@@ -383,10 +756,45 @@
                 Number("{{ stat_usia.u45_54|default:0 }}"),
                 Number("{{ stat_usia.u55|default:0 }}")
               ],
-              backgroundColor: '#0dcaf0'
+              backgroundColor: '#8b5cf6',
+              borderRadius: 6
             }]
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false } },
+              y: { grid: { color: '#e2e8f0' }, beginAtZero: true }
+            }
+          }
+        });
+      }
+
+      // 4. CHART GOLONGAN / PANGKAT BARU
+      const elGolongan = document.getElementById('chartGolongan');
+      if (elGolongan) {
+        new Chart(elGolongan.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: golonganLabels,
+            datasets: [{
+              label: 'Jumlah Pegawai',
+              data: golonganData,
+              backgroundColor: '#0284c7',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false } },
+              y: { grid: { color: '#e2e8f0' }, beginAtZero: true }
+            }
+          }
         });
       }
     });
