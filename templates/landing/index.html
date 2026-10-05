@@ -15,14 +15,21 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+    /* PALET WARNA KHAS KOTA METRO */
     :root {
-      --bg-main: #f3f6fc;
+      --bg-main: #f8fafc;
       --bg-card: #ffffff;
-      --border-color: #eef2f6;
+      --border-color: #e2e8f0;
       --text-muted: #64748b;
       --text-main: #0f172a;
-      --primary-blue: #2563eb;
-      --primary-soft: #eff6ff;
+      
+      /* Warna Khas Kota Metro */
+      --metro-blue: #1d4ed8;       /* Biru Utama */
+      --metro-blue-dark: #1e40af;  /* Biru Gelap Header */
+      --metro-orange: #ff6b00;     /* Oranye Cerah Khas Metro */
+      --metro-orange-hover: #ea580c;
+      --metro-blue-soft: #eff6ff;
+      --metro-orange-soft: #fff7ed;
     }
 
     body {
@@ -33,16 +40,17 @@
       font-size: 0.9rem;
     }
 
-    /* 1. TOP NAVBAR WHITE */
+    /* 1. TOP NAVBAR */
     .top-navbar {
       background-color: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 3px solid var(--metro-orange); /* Border oranye khas Kota Metro */
       padding: 12px 32px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
     }
 
     .nav-header-link {
-      color: #475569;
-      font-weight: 500;
+      color: #334155;
+      font-weight: 600;
       text-decoration: none;
       font-size: 0.88rem;
       padding: 6px 14px;
@@ -51,27 +59,46 @@
     }
 
     .nav-header-link:hover, .nav-header-link.active {
-      color: var(--primary-blue);
-      background-color: #f1f5f9;
-      font-weight: 600;
+      color: var(--metro-orange);
+      background-color: var(--metro-orange-soft);
+      font-weight: 700;
     }
 
-    /* 2. HERO SECTION */
+    /* TOMBOL DENGAN WARNA METRO */
+    .btn-primary {
+      background-color: var(--metro-blue) !important;
+      border-color: var(--metro-blue) !important;
+    }
+    .btn-primary:hover {
+      background-color: var(--metro-blue-dark) !important;
+      border-color: var(--metro-blue-dark) !important;
+    }
+    .btn-outline-primary {
+      color: var(--metro-blue) !important;
+      border-color: var(--metro-blue) !important;
+    }
+    .btn-outline-primary:hover {
+      background-color: var(--metro-blue) !important;
+      color: #ffffff !important;
+    }
+
+    /* 2. HERO SECTION - GRADIENT BIRU KE ORANYE METRO */
     .hero-section {
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.7) 100%), 
+      background: linear-gradient(135deg, rgba(30, 64, 175, 0.92) 0%, rgba(234, 88, 12, 0.88) 100%), 
                   url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
       border-radius: 16px;
       padding: 40px 48px;
       color: #ffffff;
       position: relative;
       margin-bottom: 24px;
+      box-shadow: 0 8px 20px rgba(29, 78, 216, 0.15);
     }
 
     .hero-location-badge {
       position: absolute;
       top: 24px;
       right: 24px;
-      background: rgba(255, 255, 255, 0.9);
+      background: #ffffff;
       backdrop-filter: blur(8px);
       color: #0f172a;
       border-radius: 12px;
@@ -80,21 +107,30 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-left: 4px solid var(--metro-orange);
     }
 
     .hero-search-box {
       background: #ffffff;
       border-radius: 12px;
       padding: 6px 8px 6px 20px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
       max-width: 580px;
     }
 
-    /* 3. KPI CARDS STYLING (MATCHING IMAGE) */
+    .hero-search-box .btn-primary {
+      background-color: var(--metro-orange) !important;
+      border-color: var(--metro-orange) !important;
+    }
+    .hero-search-box .btn-primary:hover {
+      background-color: var(--metro-orange-hover) !important;
+    }
+
+    /* 3. KPI CARDS STYLING */
     .kpi-card-custom {
       background: #ffffff;
-      border: 1px solid #eef2f6;
+      border: 1px solid #e2e8f0;
       border-radius: 16px;
       padding: 20px;
       display: flex;
@@ -102,14 +138,14 @@
       gap: 16px;
       position: relative;
       transition: all 0.25s ease;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.03);
       height: 100%;
     }
 
     .kpi-card-custom:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 20px -5px rgba(15, 23, 42, 0.08);
-      border-color: #cbd5e1;
+      box-shadow: 0 12px 20px -5px rgba(234, 88, 12, 0.12);
+      border-color: var(--metro-orange);
     }
 
     .kpi-icon-wrapper {
@@ -130,15 +166,18 @@
       color: #94a3b8;
       font-size: 1.1rem;
     }
+    .kpi-arrow-link:hover {
+      color: var(--metro-orange);
+    }
 
     /* 4. DASHBOARD PANEL CARD */
     .dashboard-panel-custom {
       background: #ffffff;
-      border: 1px solid #eef2f6;
+      border: 1px solid #e2e8f0;
       border-radius: 16px;
       padding: 24px;
       margin-bottom: 24px;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
     }
 
     .panel-header {
@@ -151,7 +190,7 @@
     .panel-header-title {
       font-size: 0.98rem;
       font-weight: 700;
-      color: #0f172a;
+      color: var(--metro-blue-dark);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -161,9 +200,10 @@
     .sidebar-card {
       background: #ffffff;
       border-radius: 16px;
-      border: 1px solid #eef2f6;
+      border: 1px solid #e2e8f0;
       padding: 20px;
-      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+      border-top: 4px solid var(--metro-blue);
     }
 
     /* 5. TABLES */
@@ -173,13 +213,13 @@
     }
 
     .table-modern th {
-      background-color: #f8fafc;
-      color: #64748b;
+      background-color: #1e40af; /* Header Tabel Biru Metro */
+      color: #ffffff;
       font-weight: 700;
       text-transform: uppercase;
       font-size: 0.72rem;
       letter-spacing: 0.05em;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 2px solid var(--metro-orange);
       padding: 12px 16px;
     }
 
@@ -189,13 +229,13 @@
       vertical-align: middle;
     }
 
-    /* BADGES & CHIPS */
-    .badge-pns { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-    .badge-pppk { background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .badge-pw { background-color: #f3e8ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    /* BADGES & CHIPS ACCENTED METRO */
+    .badge-pns { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .badge-pppk { background-color: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .badge-pw { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
 
     .nav-tabs-modern .nav-link {
-      color: #64748b;
+      color: #475569;
       border: none;
       font-size: 0.85rem;
       font-weight: 600;
@@ -205,7 +245,7 @@
     }
 
     .nav-tabs-modern .nav-link.active {
-      background-color: var(--primary-blue);
+      background-color: var(--metro-blue);
       color: #ffffff;
     }
 
@@ -219,20 +259,20 @@
     }
 
     .nav-pills-sm .nav-link.active {
-      background-color: var(--primary-blue);
+      background-color: var(--metro-orange);
       color: #ffffff;
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP NAVBAR HASIL INTEGRASI SAMAN CONTOH -->
+  <!-- TOP NAVBAR -->
   <header class="top-navbar d-flex align-items-center justify-content-between sticky-top">
     <div class="d-flex align-items-center gap-4">
       <a class="navbar-brand d-flex align-items-center gap-2.5 fw-bold fs-6 text-dark m-0" href="#">
         <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Lambang_Kabupaten_Lampung_Selatan.png" alt="Logo" width="30" height="36" class="me-1" onerror="this.style.display='none'">
         <div>
-          <div class="lh-1 fw-bold text-dark" style="font-size: 0.95rem;">SIDATA ASN</div>
+          <div class="lh-1 fw-bold" style="font-size: 0.95rem; color: var(--metro-blue-dark);">SIDATA ASN</div>
           <div class="lh-1 text-muted fw-normal mt-1" style="font-size: 0.75rem;">BKPSDM Kota Metro</div>
         </div>
       </a>
@@ -240,11 +280,6 @@
       <!-- MENU NAVIGASI HEADER -->
       <nav class="d-none d-xl-flex align-items-center gap-1 ms-3">
         <a href="#" class="nav-header-link active"><i class="bx bx-home-alt me-1"></i>Beranda</a>
-        <!-- <a href="#" class="nav-header-link">Data Publik</a>
-        <a href="#" class="nav-header-link">Statistik</a>
-        <a href="#" class="nav-header-link">Peta & Lokasi</a>
-        <a href="#" class="nav-header-link">Informasi</a>
-        <a href="#" class="nav-header-link">Tentang</a> -->
       </nav>
     </div>
 
@@ -270,12 +305,12 @@
 
   <div class="container-fluid px-4 py-4">
 
-    <!-- HERO BANNER SECTION (SESUAI CONTOH GAMBAR) -->
+    <!-- HERO BANNER SECTION -->
     <section class="hero-section">
       <div class="hero-location-badge">
-        <i class="bx bx-map-pin text-primary fs-5"></i>
+        <i class="bx bx-map-pin fs-5" style="color: var(--metro-orange);"></i>
         <div>
-          <div class="fw-bold lh-1" style="font-size: 0.8rem;">BKPSDM Kota</div>
+          <div class="fw-bold lh-1" style="font-size: 0.8rem; color: var(--metro-blue-dark);">BKPSDM Kota</div>
           <div class="text-muted lh-1 mt-1" style="font-size: 0.7rem;">Metro</div>
         </div>
       </div>
@@ -301,7 +336,7 @@
         <div class="sidebar-card">
           <form method="get" id="filterForm">
             <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-              <span class="fw-bold text-uppercase fs-7 text-primary"><i class="bx bx-filter-alt me-1"></i> Filter Presets</span>
+              <span class="fw-bold text-uppercase fs-7" style="color: var(--metro-orange);"><i class="bx bx-filter-alt me-1"></i> Filter Presets</span>
               <a href="{% url 'landing_index' %}" class="text-muted text-decoration-none small hover-primary" title="Reset Filter">
                 <i class="bx bx-refresh fs-5"></i>
               </a>
@@ -358,13 +393,13 @@
       <!-- MAIN CONTENT AREA (KANAN) -->
       <main class="col-lg-9 col-xl-10">
 
-        <!-- RINGKASAN KPI METRIC (CARDS SESUAI CONTOH HASIL GAMBAR) -->
+        <!-- RINGKASAN KPI METRIC -->
         <div class="row g-3 mb-4">
-          <!-- TOTAL PEGAWAI -->
+          <!-- TOTAL PEGAWAI (BIRU METRO) -->
           <div class="col-xl-3 col-md-6">
-            <div class="kpi-card-custom">
+            <div class="kpi-card-custom" style="border-left: 4px solid var(--metro-blue);">
               <a href="#" class="kpi-arrow-link"><i class="bx bx-chevron-right"></i></a>
-              <div class="kpi-icon-wrapper" style="background-color: #dbeafe; color: #2563eb;">
+              <div class="kpi-icon-wrapper" style="background-color: #dbeafe; color: var(--metro-blue);">
                 <i class="bx bx-group"></i>
               </div>
               <div>
@@ -375,11 +410,11 @@
             </div>
           </div>
 
-          <!-- TOTAL PNS -->
+          <!-- TOTAL PNS (HIJAU KOTA) -->
           <div class="col-xl-3 col-md-6">
-            <div class="kpi-card-custom">
+            <div class="kpi-card-custom" style="border-left: 4px solid #16a34a;">
               <a href="#" class="kpi-arrow-link"><i class="bx bx-chevron-right"></i></a>
-              <div class="kpi-icon-wrapper" style="background-color: #d1fae5; color: #059669;">
+              <div class="kpi-icon-wrapper" style="background-color: #dcfce7; color: #16a34a;">
                 <i class="bx bx-user-check"></i>
               </div>
               <div>
@@ -390,11 +425,11 @@
             </div>
           </div>
 
-          <!-- TOTAL PPPK PENUH WAKTU -->
+          <!-- TOTAL PPPK PENUH WAKTU (ORANYE METRO) -->
           <div class="col-xl-3 col-md-6">
-            <div class="kpi-card-custom">
+            <div class="kpi-card-custom" style="border-left: 4px solid var(--metro-orange);">
               <a href="#" class="kpi-arrow-link"><i class="bx bx-chevron-right"></i></a>
-              <div class="kpi-icon-wrapper" style="background-color: #fef3c7; color: #d97706;">
+              <div class="kpi-icon-wrapper" style="background-color: var(--metro-orange-soft); color: var(--metro-orange);">
                 <i class="bx bx-briefcase"></i>
               </div>
               <div>
@@ -405,11 +440,11 @@
             </div>
           </div>
 
-          <!-- TOTAL PPPK PARUH WAKTU -->
+          <!-- TOTAL PPPK PARUH WAKTU (UNGU AKSEN) -->
           <div class="col-xl-3 col-md-6">
-            <div class="kpi-card-custom">
+            <div class="kpi-card-custom" style="border-left: 4px solid #9333ea;">
               <a href="#" class="kpi-arrow-link"><i class="bx bx-chevron-right"></i></a>
-              <div class="kpi-icon-wrapper" style="background-color: #f3e8ff; color: #7c3aed;">
+              <div class="kpi-icon-wrapper" style="background-color: #f3e8ff; color: #9333ea;">
                 <i class="bx bx-time-five"></i>
               </div>
               <div>
@@ -428,12 +463,9 @@
             <div class="dashboard-panel-custom h-100">
               <div class="panel-header">
                 <div class="panel-header-title">
-                  <i class="bx bx-line-chart text-primary fs-5"></i>
-                  <span>Tren Pengangkatan PNS per Tahun</span>
+                  <i class="bx bx-line-chart fs-5" style="color: var(--metro-blue);"></i>
+                  <span>Jumlah PNS per Tahun TMT</span>
                 </div>
-                <select class="form-select form-select-sm border-0 bg-light style-select" style="width: 140px;">
-                  <option>Semua Kategori</option>
-                </select>
               </div>
               <div style="height: 250px; position: relative;">
                 <canvas id="chartTrendPNS"></canvas>
@@ -441,12 +473,12 @@
             </div>
           </div>
 
-          <!-- DONUT CHART: KOMPOSISI JABATAN (PERSIS CONTOH DATA PER KATEGORI) -->
+          <!-- DONUT CHART: KOMPOSISI JABATAN -->
           <div class="col-lg-5">
             <div class="dashboard-panel-custom h-100">
               <div class="panel-header">
                 <div class="panel-header-title">
-                  <i class="bx bx-pie-chart-alt-2 text-primary fs-5"></i>
+                  <i class="bx bx-pie-chart-alt-2 fs-5" style="color: var(--metro-orange);"></i>
                   <span>Data per Jabatan</span>
                 </div>
               </div>
@@ -463,15 +495,15 @@
                 <div class="col-6">
                   <div class="d-flex flex-column gap-2 fs-7">
                     <div class="d-flex align-items-center justify-content-between">
-                      <span><i class="bx bxs-circle me-1" style="color: #2563eb;"></i> Struktural</span>
+                      <span><i class="bx bxs-circle me-1" style="color: #1d4ed8;"></i> Struktural</span>
                       <span class="fw-bold">{{ stat_jabatan.struktural|default:0 }}</span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                      <span><i class="bx bxs-circle me-1" style="color: #10b981;"></i> Fungsional</span>
+                      <span><i class="bx bxs-circle me-1" style="color: #16a34a;"></i> Fungsional</span>
                       <span class="fw-bold">{{ stat_jabatan.fungsional|default:0 }}</span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                      <span><i class="bx bxs-circle me-1" style="color: #f59e0b;"></i> Pelaksana</span>
+                      <span><i class="bx bxs-circle me-1" style="color: #ff6b00;"></i> Pelaksana</span>
                       <span class="fw-bold">{{ stat_jabatan.pelaksana|default:0 }}</span>
                     </div>
                   </div>
@@ -487,7 +519,7 @@
             <div class="dashboard-panel-custom h-100">
               <div class="panel-header">
                 <div class="panel-header-title">
-                  <i class="bx bx-bar-chart-alt-2 text-success fs-5"></i>
+                  <i class="bx bx-bar-chart-alt-2 fs-5" style="color: #16a34a;"></i>
                   <span>Distribusi Usia Pegawai</span>
                 </div>
               </div>
@@ -501,7 +533,7 @@
             <div class="dashboard-panel-custom h-100">
               <div class="panel-header">
                 <div class="panel-header-title">
-                  <i class="bx bx-award text-warning fs-5"></i>
+                  <i class="bx bx-award fs-5" style="color: var(--metro-orange);"></i>
                   <span>Distribusi Golongan / Pangkat</span>
                 </div>
               </div>
@@ -516,7 +548,7 @@
         <div class="row g-3 mb-4">
           <!-- CARD PROYEKSI PENSIUN -->
           <div class="col-md-6">
-            <div class="kpi-card-custom border-danger-subtle bg-white">
+            <div class="kpi-card-custom border-danger-subtle bg-white" style="border-left: 4px solid #dc2626;">
               <div class="kpi-icon-wrapper bg-danger-subtle text-danger">
                 <i class="bx bx-user-x"></i>
               </div>
@@ -530,13 +562,13 @@
 
           <!-- CARD PROYEKSI HABIS KONTRAK -->
           <div class="col-md-6">
-            <div class="kpi-card-custom border-warning-subtle bg-white">
-              <div class="kpi-icon-wrapper bg-warning-subtle text-warning">
+            <div class="kpi-card-custom bg-white" style="border: 1px solid #fed7aa; border-left: 4px solid var(--metro-orange);">
+              <div class="kpi-icon-wrapper text-white" style="background-color: var(--metro-orange);">
                 <i class="bx bx-calendar-exclamation"></i>
               </div>
               <div class="w-100">
-                <div class="text-warning fw-bold fs-7"><i class="bx bx-calendar-exclamation me-1"></i> Habis Masa Kontrak PPPK / PW (5 Tahun)</div>
-                <div class="fw-bold fs-2 text-warning mt-1">{{ total_proyeksi_kontrak }} <span class="fs-7 text-muted font-normal">Orang</span></div>
+                <div class="fw-bold fs-7" style="color: var(--metro-orange);"><i class="bx bx-calendar-exclamation me-1"></i> Habis Masa Kontrak PPPK / PW (5 Tahun)</div>
+                <div class="fw-bold fs-2 mt-1" style="color: var(--metro-orange);">{{ total_proyeksi_kontrak }} <span class="fs-7 text-muted font-normal">Orang</span></div>
                 <div class="text-muted fs-8 mt-1">Akumulasi PPPK & Paruh Waktu selesai masa SK</div>
               </div>
             </div>
@@ -559,11 +591,11 @@
           </div>
         </div>
 
-        <!-- TABEL REKAPITULASI DETAIL AGREGAT (STYLE PANEL SAMA DENGAN TABEL DATA TERBARU ON EXAMPLE) -->
+        <!-- TABEL REKAPITULASI DETAIL AGREGAT -->
         <div class="dashboard-panel-custom p-0 overflow-hidden">
           <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-white">
-            <div class="fw-bold text-dark fs-7 d-flex align-items-center gap-2">
-              <i class="bx bx-table text-primary fs-5"></i> Ringkasan Agregat & Detail Kepegawaian
+            <div class="fw-bold fs-7 d-flex align-items-center gap-2" style="color: var(--metro-blue-dark);">
+              <i class="bx bx-table fs-5" style="color: var(--metro-orange);"></i> Ringkasan Agregat & Detail Kepegawaian
             </div>
             
             <!-- NAV TABS UTAMA -->
@@ -596,14 +628,14 @@
                       <td class="text-center"><span class="badge badge-pns rounded-pill px-3">{{ stat_pegawai.pns_l|default:0 }}</span></td>
                       <td class="text-center"><span class="badge badge-pppk rounded-pill px-3">{{ stat_pegawai.pppk_l|default:0 }}</span></td>
                       <td class="text-center"><span class="badge badge-pw rounded-pill px-3">{{ stat_pegawai.pppk_pw_l|default:0 }}</span></td>
-                      <td class="text-center fw-bold text-primary fs-6">{{ stat_pegawai.pns_l|add:stat_pegawai.pppk_l|add:stat_pegawai.pppk_pw_l }}</td>
+                      <td class="text-center fw-bold fs-6" style="color: var(--metro-blue);">{{ stat_pegawai.pns_l|add:stat_pegawai.pppk_l|add:stat_pegawai.pppk_pw_l }}</td>
                     </tr>
                     <tr>
                       <td><i class="bx bx-female text-danger me-2 fs-5"></i><strong>PEREMPUAN</strong></td>
                       <td class="text-center"><span class="badge badge-pns rounded-pill px-3">{{ stat_pegawai.pns_p|default:0 }}</span></td>
                       <td class="text-center"><span class="badge badge-pppk rounded-pill px-3">{{ stat_pegawai.pppk_p|default:0 }}</span></td>
                       <td class="text-center"><span class="badge badge-pw rounded-pill px-3">{{ stat_pegawai.pppk_pw_p|default:0 }}</span></td>
-                      <td class="text-center fw-bold text-primary fs-6">{{ stat_pegawai.pns_p|add:stat_pegawai.pppk_p|add:stat_pegawai.pppk_pw_p }}</td>
+                      <td class="text-center fw-bold fs-6" style="color: var(--metro-blue);">{{ stat_pegawai.pns_p|add:stat_pegawai.pppk_p|add:stat_pegawai.pppk_pw_p }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -630,7 +662,7 @@
                       <td class="text-center">{{ a.pns|default:0 }}</td>
                       <td class="text-center">{{ a.pppk|default:0 }}</td>
                       <td class="text-center">{{ a.pppk_pw|default:0 }}</td>
-                      <td class="text-center fw-bold text-primary">{{ a.total|default:0 }}</td>
+                      <td class="text-center fw-bold" style="color: var(--metro-blue);">{{ a.total|default:0 }}</td>
                     </tr>
                     {% empty %}
                     <tr><td colspan="5" class="text-center text-muted py-3">Data tidak ditemukan.</td></tr>
@@ -660,7 +692,7 @@
                       <td class="text-center">{{ p.pns|default:0 }}</td>
                       <td class="text-center">{{ p.pppk|default:0 }}</td>
                       <td class="text-center">{{ p.pppk_pw|default:0 }}</td>
-                      <td class="text-center fw-bold text-primary">{{ p.total|default:0 }}</td>
+                      <td class="text-center fw-bold" style="color: var(--metro-blue);">{{ p.total|default:0 }}</td>
                     </tr>
                     {% empty %}
                     <tr><td colspan="5" class="text-center text-muted py-3">Data tidak ditemukan.</td></tr>
@@ -701,7 +733,7 @@
                           <td class="text-center"><span class="badge badge-pns rounded-pill px-3">{{ g.pns|default:0 }}</span></td>
                           <td class="text-center"><span class="badge badge-pppk rounded-pill px-3">{{ g.pppk|default:0 }}</span></td>
                           <td class="text-center"><span class="badge badge-pw rounded-pill px-3">{{ g.pppk_pw|default:0 }}</span></td>
-                          <td class="text-center fw-bold text-primary">{{ g.total|default:0 }}</td>
+                          <td class="text-center fw-bold" style="color: var(--metro-blue);">{{ g.total|default:0 }}</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="5" class="text-center text-muted py-3">Data tidak ditemukan.</td></tr>
@@ -725,7 +757,7 @@
                         {% if g.pns > 0 %}
                         <tr>
                           <td><strong>{{ g.golongan_terakhir|default:"TIDAK TERDATAT" }}</strong></td>
-                          <td class="text-center fw-bold text-primary">{{ g.pns }}</td>
+                          <td class="text-center fw-bold" style="color: var(--metro-blue);">{{ g.pns }}</td>
                         </tr>
                         {% endif %}
                         {% empty %}
@@ -775,7 +807,7 @@
                         {% if g.pppk_pw > 0 %}
                         <tr>
                           <td><strong>{{ g.golongan_terakhir|default:"TIDAK TERDATAT" }}</strong></td>
-                          <td class="text-center fw-bold" style="color: #7c3aed;">{{ g.pppk_pw }}</td>
+                          <td class="text-center fw-bold" style="color: var(--metro-orange);">{{ g.pppk_pw }}</td>
                         </tr>
                         {% endif %}
                         {% empty %}
@@ -823,10 +855,10 @@
     </div>
   </div>
 
-  <!-- FOOTER SAMA SEPERTI DI GAMBAR REFERENSI -->
-  <footer class="bg-white border-top py-3 mt-4">
+  <!-- FOOTER DENGAN SENTUHAN BIRU METRO -->
+  <footer class="bg-white border-top py-3 mt-4" style="border-top: 3px solid var(--metro-blue) !important;">
     <div class="container-fluid px-4 d-flex flex-column flex-md-row align-items-center justify-content-between fs-8 text-muted">
-      <div>&copy; {{ today|date:"Y" }} Sistem Informasi Data Kepegawaian. BKPSDM Kabupaten Lampung Selatan.</div>
+      <div>&copy; {{ today|date:"Y" }} Sistem Informasi Data Kepegawaian. BKPSDM Kota Metro.</div>
       <div class="d-flex gap-3 mt-2 mt-md-0">
         <a href="#" class="text-muted text-decoration-none">Beranda</a>
         <a href="#" class="text-muted text-decoration-none">Data Publik</a>
@@ -848,10 +880,10 @@
   {{ chart_pensiun_data|json_script:"data-pensiun-data" }}
   {{ chart_kontrak_data|json_script:"data-kontrak-data" }}
 
-  <!-- SCRIPT CHART.JS STYLING MODERN -->
+  <!-- SCRIPT CHART.JS DENGAN PALET WARNA METRO -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      Chart.defaults.color = '#94a3b8';
+      Chart.defaults.color = '#64748b';
       Chart.defaults.font.family = "'Plus Jakarta Sans', 'Inter', sans-serif";
 
       const chartTahun = JSON.parse(document.getElementById('data-chart-tahun').textContent || '[]');
@@ -859,7 +891,7 @@
       const golonganLabels = JSON.parse(document.getElementById('data-golongan-labels').textContent || '[]');
       const golonganData = JSON.parse(document.getElementById('data-golongan-data').textContent || '[]');
 
-      // 1. CHART TREN PNS (LINE CHART LIGHT SMOOTH)
+      // 1. CHART TREN PNS (LINE CHART BIRU METRO)
       const elTrendPNS = document.getElementById('chartTrendPNS');
       if (elTrendPNS) {
         new Chart(elTrendPNS.getContext('2d'), {
@@ -869,12 +901,12 @@
             datasets: [{
               label: 'Jumlah Pengangkatan PNS',
               data: chartPNSCount,
-              borderColor: '#2563eb',
-              backgroundColor: 'rgba(37, 99, 235, 0.05)',
+              borderColor: '#1d4ed8',
+              backgroundColor: 'rgba(29, 78, 216, 0.08)',
               borderWidth: 2.5,
               fill: true,
               tension: 0.4,
-              pointBackgroundColor: '#2563eb',
+              pointBackgroundColor: '#ff6b00',
               pointHoverRadius: 6
             }]
           },
@@ -890,7 +922,7 @@
         });
       }
 
-      // 2. CHART JABATAN (DONUT MODERN CUTOUT)
+      // 2. CHART JABATAN (DONUT WARNA TRIPLE METRO: BIRU, HIJAU, ORANYE)
       const elJabatan = document.getElementById('chartJabatan');
       if (elJabatan) {
         new Chart(elJabatan.getContext('2d'), {
@@ -903,7 +935,7 @@
                 Number("{{ stat_jabatan.fungsional|default:0 }}"),
                 Number("{{ stat_jabatan.pelaksana|default:0 }}")
               ],
-              backgroundColor: ['#2563eb', '#10b981', '#f59e0b'],
+              backgroundColor: ['#1d4ed8', '#16a34a', '#ff6b00'],
               borderWidth: 0
             }]
           },
@@ -916,7 +948,7 @@
         });
       }
 
-      // 3. CHART RENTANG USIA (BAR CHART ROUNDED)
+      // 3. CHART RENTANG USIA (BAR CHART HIJAU METRO)
       const elUsia = document.getElementById('chartUsia');
       if (elUsia) {
         new Chart(elUsia.getContext('2d'), {
@@ -932,7 +964,7 @@
                 Number("{{ stat_usia.u45_54|default:0 }}"),
                 Number("{{ stat_usia.u55|default:0 }}")
               ],
-              backgroundColor: '#10b981',
+              backgroundColor: '#16a34a',
               borderRadius: 8
             }]
           },
@@ -948,7 +980,7 @@
         });
       }
 
-      // 4. CHART GOLONGAN
+      // 4. CHART GOLONGAN (BAR CHART ORANYE METRO)
       const elGolongan = document.getElementById('chartGolongan');
       if (elGolongan) {
         new Chart(elGolongan.getContext('2d'), {
@@ -958,7 +990,7 @@
             datasets: [{
               label: 'Jumlah Pegawai',
               data: golonganData,
-              backgroundColor: '#f59e0b',
+              backgroundColor: '#ff6b00',
               borderRadius: 8
             }]
           },
@@ -974,7 +1006,7 @@
         });
       }
 
-      // 5. CHART PROYEKSI
+      // 5. CHART PROYEKSI (PENSIUN MERAH & KONTRAK ORANYE)
       const tahunProyeksi = JSON.parse(document.getElementById('data-tahun-proyeksi').textContent || '[]');
       const pensiunData = JSON.parse(document.getElementById('data-pensiun-data').textContent || '[]');
       const kontrakData = JSON.parse(document.getElementById('data-kontrak-data').textContent || '[]');
@@ -989,13 +1021,13 @@
               {
                 label: 'Estimasi Pensiun PNS (BUP 58)',
                 data: pensiunData,
-                backgroundColor: '#ef4444',
+                backgroundColor: '#dc2626',
                 borderRadius: 8
               },
               {
                 label: 'Habis Masa Kontrak PPPK / PW',
                 data: kontrakData,
-                backgroundColor: '#f59e0b',
+                backgroundColor: '#ff6b00',
                 borderRadius: 8
               }
             ]
