@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6 mx-auto">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ title }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          
+          <div class="alert alert-info small mb-3">
+            <strong>Petunjuk Format Excel (.xlsx / .csv):</strong>
+            <p class="mb-1">Pastikan baris pertama (header) tabel memiliki kolom:</p>
+            <ul class="mb-0 ps-3">
+              <li><code>NIP</code></li>
+              <li><code>Jenis Transaksi</code> (Isi: <code>PERPANJANGAN_PPPK</code> atau <code>PERPANJANGAN_PPPK_PW</code>)</li>
+              <li><code>TMT Mulai</code> (YYYY-MM-DD)</li>
+              <li><code>TMT Selesai</code> (YYYY-MM-DD)</li>
+              <li><code>Nomor SK</code></li>
+              <li><code>Tanggal SK</code> (YYYY-MM-DD)</li>
+              <li><code>Keterangan</code> (Opsional)</li>
+            </ul>
+          </div>
+
+          <div class="mb-3">
+            {{ form.file_excel.label_tag }}
+            {{ form.file_excel }}
+            {% if form.file_excel.errors %}
+              <div class="text-danger small mt-1">{{ form.file_excel.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-primary me-2"><i class="bx bx-upload me-1"></i> Upload & Proses Import</button>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Kembali</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -26,23 +26,49 @@
             {% if form.jenis_transaksi.errors %}<div class="text-danger small mt-1">{{ form.jenis_transaksi.errors.0 }}</div>{% endif %}
           </div>
 
+          <!-- INPUT DINAMIS: ASAL INSTANSI (KHUSUS MUTASI MASUK) -->
+          <div class="mb-3" id="wrapper-asal-instansi" style="display: none;">
+            <label class="form-label text-primary fw-bold">Asal Instansi</label>
+            {{ form.asal_instansi }}
+            <div class="form-text text-muted small">Diisi nama instansi asal pegawai sebelum mutasi masuk.</div>
+            {% if form.asal_instansi.errors %}<div class="text-danger small mt-1">{{ form.asal_instansi.errors.0 }}</div>{% endif %}
+          </div>
+
+          <!-- INPUT DINAMIS: TUJUAN INSTANSI (KHUSUS MUTASI KELUAR) -->
+          <div class="mb-3" id="wrapper-tujuan-instansi" style="display: none;">
+            <label class="form-label text-danger fw-bold">Tujuan Instansi</label>
+            {{ form.tujuan_instansi }}
+            <div class="form-text text-muted small">Diisi nama instansi tujuan mutasi keluar.</div>
+            {% if form.tujuan_instansi.errors %}<div class="text-danger small mt-1">{{ form.tujuan_instansi.errors.0 }}</div>{% endif %}
+          </div>
+
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label class="form-label">TMT SK</label>
+              <label class="form-label">TMT SK / Mulai Kontrak</label>
               {{ form.tmt }}
               {% if form.tmt.errors %}<div class="text-danger small mt-1">{{ form.tmt.errors.0 }}</div>{% endif %}
             </div>
+            
+            <!-- INPUT TMT SELESAI (DINAMIS KHUSUS PPPK) -->
+            <div class="col-md-6 mb-3" id="wrapper-tmt-selesai" style="display: none;">
+              <label class="form-label text-warning fw-bold">TMT Selesai / Akhir Kontrak</label>
+              {{ form.tmt_selesai }}
+              <div class="form-text text-muted small">Wajib diisi untuk PPPK / PPPK Paruh Waktu.</div>
+              {% if form.tmt_selesai.errors %}<div class="text-danger small mt-1">{{ form.tmt_selesai.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">Tanggal SK</label>
               {{ form.tanggal_sk }}
               {% if form.tanggal_sk.errors %}<div class="text-danger small mt-1">{{ form.tanggal_sk.errors.0 }}</div>{% endif %}
             </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Nomor SK</label>
-            {{ form.nomor_sk }}
-            {% if form.nomor_sk.errors %}<div class="text-danger small mt-1">{{ form.nomor_sk.errors.0 }}</div>{% endif %}
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nomor SK</label>
+              {{ form.nomor_sk }}
+              {% if form.nomor_sk.errors %}<div class="text-danger small mt-1">{{ form.nomor_sk.errors.0 }}</div>{% endif %}
+            </div>
           </div>
 
           <div class="mb-3">
@@ -66,4 +92,43 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectJenis = document.querySelector("select[name='jenis_transaksi']");
+    const wrapperTmtSelesai = document.getElementById("wrapper-tmt-selesai");
+    const wrapperAsalInstansi = document.getElementById("wrapper-asal-instansi");
+    const wrapperTujuanInstansi = document.getElementById("wrapper-tujuan-instansi");
+
+    function updateDynamicFields() {
+      if (!selectJenis) return;
+      const val = selectJenis.value;
+
+      // 1. Logika TMT Selesai (Kontrak PPPK)
+      const listPPPK = ['PPPK', 'PERPANJANGAN_PPPK', 'PPPK_PW', 'PERPANJANGAN_PPPK_PW'];
+      if (listPPPK.includes(val)) {
+        wrapperTmtSelesai.style.display = "block";
+      } else {
+        wrapperTmtSelesai.style.display = "none";
+      }
+
+      // 2. Logika Mutasi Masuk & Keluar
+      wrapperAsalInstansi.style.display = "none";
+      wrapperTujuanInstansi.style.display = "none";
+
+      if (val === 'MUTASI_MASUK') {
+        wrapperAsalInstansi.style.display = "block";
+      } else if (val === 'MUTASI_KELUAR') {
+        wrapperTujuanInstansi.style.display = "block";
+      }
+    }
+
+    if (selectJenis) {
+      updateDynamicFields(); // Jalankan saat halaman dimuat (untuk handle error validasi form)
+      selectJenis.addEventListener("change", updateDynamicFields);
+    }
+  });
+</script>
 {% endblock %}

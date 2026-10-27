@@ -16,7 +16,7 @@ from pegawai.models import Pegawai, RiwayatKepegawaian, RiwayatJabatan, RiwayatP
 from pegawai.forms import (
     RiwayatKepegawaianForm, RiwayatJabatanForm, ImportSKJabatanMassalForm, 
     ImportRiwayatJabatanForm, RiwayatPangkatForm, ImportRiwayatPangkatForm, 
-    RiwayatPendidikanForm, ImportRiwayatPendidikanForm
+    RiwayatPendidikanForm, ImportRiwayatPendidikanForm, ImportPerpanjanganKontrakForm
 )
 from .helpers import get_jabatan_from_excel
 
@@ -56,19 +56,31 @@ def riwayat_kepegawaian_delete(request, pk):
     pegawai = riwayat.pegawai
     if request.method == 'POST':
         riwayat.delete()
+        
+        # Cari riwayat terbaru setelah data ini dihapus
         latest = pegawai.riwayat_kepegawaian.order_by('-tmt').first()
         if latest:
             mapping_status = {
-                'CPNS': 'AKTIF', 'PNS': 'AKTIF', 'PPPK': 'AKTIF', 'MUTASI_MASUK': 'AKTIF', 'REAKTIF': 'AKTIF',
-                'MUTASI_KELUAR': 'MUTASI_KELUAR', 'PENSIUN': 'PENSIUN', 'CLTN': 'CLTN', 'TUGAS_BELAJAR': 'TUGAS_BELAJAR',
+                'CPNS': 'AKTIF',
+                'PNS': 'AKTIF',
+                'PPPK': 'AKTIF',
+                'PERPANJANGAN_PPPK': 'AKTIF',
+                'PPPK_PW': 'PPPK_PW',
+                'PERPANJANGAN_PPPK_PW': 'PPPK_PW',
+                'MUTASI_MASUK': 'AKTIF',
+                'REAKTIF': 'AKTIF',
+                'MUTASI_KELUAR': 'MUTASI_KELUAR',
+                'PENSIUN': 'PENSIUN',
+                'CLTN': 'CLTN',
+                'TUGAS_BELAJAR': 'TUGAS_BELAJAR',
             }
             pegawai.status_keaktifan = mapping_status.get(latest.jenis_transaksi, 'AKTIF')
         else:
             pegawai.status_keaktifan = 'AKTIF'
+            
         pegawai.save(update_fields=['status_keaktifan'])
         messages.success(request, 'Riwayat kepegawaian berhasil dihapus.')
     return redirect('pegawai_detail', pk=pegawai.pk)
-
 
 # --- RIWAYAT JABATAN ---
 @login_required
@@ -518,3 +530,77 @@ def riwayat_pendidikan_import(request):
     else:
         form = ImportRiwayatPendidikanForm()
     return render(request, 'pegawai/riwayat_pendidikan_import.html', {'form': form, 'title': 'Import Riwayat Pendidikan Massal'})
+
+@login_required
+def import_perpanjangan_kontrak(request):
+    if request.method == 'POST':
+        form = ImportPerpanjanganKontrakForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = request.FILES.get('file_excel')
+            
+            try:
+                # Membaca file excel menggunakan pandas
+                df = pd.read_excel(excel_file)
+                
+                success_count = 0
+                error_count = 0
+                not_found_nips = []
+                
+                for index, row in df.iterrows():
+                    nip = str(row.get('NIP', '')).strip()
+                    # Default ke PERPANJANGAN_PPPK jika kolom kosong
+                    jenis_transaksi = str(row.get('Jenis Transaksi', 'PERPANJANGAN_PPPK')).strip().upper()
+                    tmt = row.get('TMT Mulai')
+                    tmt_selesai = row.get('TMT Selesai')
+                    nomor_sk = str(row.get('Nomor SK', '')).strip()
+                    tanggal_sk = row.get('Tanggal SK')
+                    keterangan = str(row.get('Keterangan', '')).strip()
+                    
+                    # Cari pegawai berdasarkan NIP
+                    try:
+                        pegawai = Pegawai.objects.get(nip=nip)
+                    except Pegawai.DoesNotExist:
+                        error_count += 1
+                        not_found_nips.append(nip)
+                        continue
+                    
+                    # Konversi format tanggal dari excel ke format date Python
+                    if pd.notna(tmt):
+                        tmt = pd.to_datetime(tmt).date()
+                    if pd.notna(tmt_selesai):
+                        tmt_selesai = pd.to_datetime(tmt_selesai).date()
+                    if pd.notna(tanggal_sk):
+                        tanggal_sk = pd.to_datetime(tanggal_sk).date()
+                    
+                    # Simpan ke RiwayatKepegawaian 
+                    # (method save() otomatis mengubah status keaktifan pegawai jika jenis_transaksi='PENSIUN')
+                    RiwayatKepegawaian.objects.create(
+                        pegawai=pegawai,
+                        jenis_transaksi=jenis_transaksi,
+                        tmt=tmt,
+                        tmt_selesai=tmt_selesai if pd.notna(tmt_selesai) else None,
+                        nomor_sk=nomor_sk,
+                        tanggal_sk=tanggal_sk,
+                        keterangan=keterangan
+                    )
+                    success_count += 1
+                
+                # Buat pesan informasi dinamis
+                msg = f"Berhasil memproses {success_count} data kontrak / pensiun."
+                if error_count > 0:
+                    daftar_nip = ", ".join(not_found_nips)
+                    msg += f" Gagal: {error_count} data. NIP tidak ditemukan: [{daftar_nip}]"
+                    messages.warning(request, msg)
+                else:
+                    messages.success(request, msg)
+                    
+                return redirect('dashboard')
+                
+            except Exception as e:
+                messages.error(request, f"Terjadi kesalahan saat memproses file: {e}")
+        else:
+            messages.error(request, "Terjadi kesalahan pada validasi form. Silakan periksa kembali file Anda.")
+    else:
+        form = ImportPerpanjanganKontrakForm()
+        
+    return render(request, 'pegawai/perpanjangan_kontrak_import.html', {'form': form, 'title': 'Import Perpanjangan Kontrak & Pensiun Excel'})

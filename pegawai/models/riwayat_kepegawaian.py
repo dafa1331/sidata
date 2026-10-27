@@ -12,6 +12,8 @@ class RiwayatKepegawaian(models.Model):
         ('MUTASI_MASUK', 'Mutasi Masuk'),
         ('MUTASI_KELUAR', 'Mutasi Keluar'),
         ('PENSIUN', 'Pensiun / Putus Kontrak'),
+        ('MENINGGAL_DUNIA', 'Meninggal Dunia'),
+        ('PEMBERHENTIAN_PNS', 'Pemberhentian PNS'),
         ('CLTN', 'Cuti Di Luar Tanggungan Negara'),
         ('TUGAS_BELAJAR', 'Tugas Belajar'),
         ('REAKTIF', 'Aktif Kembali'),
@@ -26,6 +28,22 @@ class RiwayatKepegawaian(models.Model):
     jenis_transaksi = models.CharField(
         max_length=30,
         choices=JENIS_TRANSAKSI,
+    )
+
+    asal_instansi = models.CharField(
+        max_length=150, 
+        blank=True, 
+        null=True, 
+        verbose_name="Asal Instansi",
+        help_text="Diisi khusus untuk Mutasi Masuk"
+    )
+    
+    tujuan_instansi = models.CharField(
+        max_length=150, 
+        blank=True, 
+        null=True, 
+        verbose_name="Tujuan Instansi",
+        help_text="Diisi khusus untuk Mutasi Keluar"
     )
 
     tmt = models.DateField(

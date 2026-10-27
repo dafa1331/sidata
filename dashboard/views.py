@@ -13,11 +13,14 @@ def dashboard_view(request):
     # 1. AMBIL OPD INDUK SAJA (parent_id IS NULL)
     opd_induk_qs = UnitKerja.objects.filter(parent__isnull=True)
     
-    # Base Queryset Pegawai
-    pegawai_qs = Pegawai.objects.all()
+    # === KUNCI 1: HANYA AMBIL PEGAWAI YANG MASIH AKTIF ===
+    # Sesuaikan status aktif yang masuk hitungan (biasanya 'AKTIF' atau 'PPPK_PW')
+    status_aktif_list = ['AKTIF', 'PPPK_PW']  # Tambahkan status lain jika perlu
+    
+    # Base Queryset Pegawai difilter yang aktif saja (mengabaikan PENSIUN, MUTASI_KELUAR, dll)
+    pegawai_qs = Pegawai.objects.filter(status_keaktifan__in=status_aktif_list)
     
     # 2. JIKA DIPILIH FILTER OPD INDUK:
-    # Filter pegawai yang berada di OPD Induk tsb ATAU di sub-unit/bidang bawahannya
     if opd_id:
         pegawai_qs = pegawai_qs.filter(
             Q(riwayat_jabatan__unit_kerja_id=opd_id) | 
@@ -28,8 +31,8 @@ def dashboard_view(request):
     stat_ringkasan = pegawai_qs.aggregate(
         total_asn=Count('id', distinct=True),
         pns=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi__in=['PNS', 'CPNS']), distinct=True),
-        pppk=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi='PPPK'), distinct=True),
-        pppk_pw=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi='PPPKPW'), distinct=True),
+        pppk=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi__in=['PPPK']), distinct=True),
+        pppk_pw=Count('id', filter=Q(riwayat_kepegawaian__jenis_transaksi__in=['PPPKPW']), distinct=True),
         total_l=Count('id', filter=Q(jenis_kelamin='L'), distinct=True),
         total_p=Count('id', filter=Q(jenis_kelamin='P'), distinct=True),
     )
@@ -52,36 +55,44 @@ def dashboard_view(request):
         gol_4=Count('id', filter=Q(riwayat_pangkat__pangkat__golongan__startswith='IV/'), distinct=True),
     )
 
-    # 3. TABEL REKAPITULASI HANYA UNTUK OPD INDUK (+ MENGHITUNG PEGAWAI DARI SUB-UNIT)
+    # 3. TABEL REKAPITULASI OPD INDUK (Hanya menghitung pegawai dengan status aktif)
     opd_list = opd_induk_qs.annotate(
         total_pns=Count(
             'riwayat_pegawai__pegawai', 
-            filter=Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PNS', 'CPNS']), 
+            filter=Q(riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list) & Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PNS', 'CPNS']), 
             distinct=True
         ) + Count(
             'sub_units__riwayat_pegawai__pegawai', 
-            filter=Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PNS', 'CPNS']), 
+            filter=Q(sub_units__riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list) & Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PNS', 'CPNS']), 
             distinct=True
         ),
         total_pppk=Count(
             'riwayat_pegawai__pegawai', 
-            filter=Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPK'), 
+            filter=Q(riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list) & Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PPPK', 'PERPANJANGAN_PPPK']), 
             distinct=True
         ) + Count(
             'sub_units__riwayat_pegawai__pegawai', 
-            filter=Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPK'), 
+            filter=Q(sub_units__riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list) & Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PPPK', 'PERPANJANGAN_PPPK']), 
             distinct=True
         ),
         total_pppk_pw=Count(
             'riwayat_pegawai__pegawai', 
-            filter=Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPKPW'), 
+            filter=Q(riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list) & Q(riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PPPKPW', 'PERPANJANGAN_PPPK_PW']), 
             distinct=True
         ) + Count(
             'sub_units__riwayat_pegawai__pegawai', 
-            filter=Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi='PPPKPW'), 
+            filter=Q(sub_units__riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list) & Q(sub_units__riwayat_pegawai__pegawai__riwayat_kepegawaian__jenis_transaksi__in=['PPPKPW', 'PERPANJANGAN_PPPK_PW']), 
             distinct=True
         ),
-        total_pegawai=Count('riwayat_pegawai__pegawai', distinct=True) + Count('sub_units__riwayat_pegawai__pegawai', distinct=True)
+        total_pegawai=Count(
+            'riwayat_pegawai__pegawai', 
+            filter=Q(riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list), 
+            distinct=True
+        ) + Count(
+            'sub_units__riwayat_pegawai__pegawai', 
+            filter=Q(sub_units__riwayat_pegawai__pegawai__status_keaktifan__in=status_aktif_list), 
+            distinct=True
+        )
     ).order_by('-total_pegawai')
 
     if opd_id:

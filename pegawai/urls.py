@@ -14,6 +14,7 @@ urlpatterns = [
     path('<int:pegawai_id>/riwayat-kepegawaian/tambah/', views.riwayat_kepegawaian_create, name='riwayat_kepegawaian_create'),
     path('riwayat-kepegawaian/<int:pk>/edit/', views.riwayat_kepegawaian_update, name='riwayat_kepegawaian_update'), # <-- Tambahkan ini
     path('riwayat-kepegawaian/<int:pk>/hapus/', views.riwayat_kepegawaian_delete, name='riwayat_kepegawaian_delete'),
+    path('import-kontrak/', views.import_perpanjangan_kontrak, name='perpanjangan_kontrak_import'),
     
     # Import
     path('import/', views.pegawai_import, name='pegawai_import'),

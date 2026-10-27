@@ -7,7 +7,7 @@ from .riwayat_views import (
     riwayat_jabatan_create, riwayat_jabatan_update, riwayat_jabatan_delete, pelantikan_massal, riwayat_jabatan_import,
     riwayat_pangkat_create, riwayat_pangkat_update, riwayat_pangkat_delete, riwayat_pangkat_import,
     riwayat_pendidikan_create, riwayat_pendidikan_update, riwayat_pendidikan_delete, riwayat_pendidikan_import,
-    get_detail_jabatan_api, toggle_tampilkan_gelar
+    get_detail_jabatan_api, toggle_tampilkan_gelar, import_perpanjangan_kontrak
 )
 from .entry_views import (
     riwayat_jabatan_entry, riwayat_pangkat_entry, riwayat_pendidikan_entry

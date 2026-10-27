@@ -80,10 +80,13 @@ class PegawaiCreateForm(PegawaiForm):
 class RiwayatKepegawaianForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = RiwayatKepegawaian
-        fields = ['jenis_transaksi', 'tmt', 'nomor_sk', 'tanggal_sk', 'keterangan', 'file_sk']
+        fields = ['jenis_transaksi', 'tmt', 'tmt_selesai', 'asal_instansi', 'tujuan_instansi', 'nomor_sk', 'tanggal_sk', 'keterangan', 'file_sk']
         widgets = {
             'tmt': forms.DateInput(attrs={'type': 'date'}),
+            'tmt_selesai': forms.DateInput(attrs={'type': 'date'}),
             'tanggal_sk': forms.DateInput(attrs={'type': 'date'}),
+            'asal_instansi': forms.TextInput(attrs={'placeholder': 'Contoh: Pemkab Pringsewu'}),
+            'tujuan_instansi': forms.TextInput(attrs={'placeholder': 'Contoh: Pemprov Lampung'}),
             'nomor_sk': forms.TextInput(attrs={'placeholder': 'Masukkan Nomor SK'}),
             'keterangan': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Keterangan opsional'}),
             'file_sk': forms.FileInput(attrs={'accept': '.pdf'}),
@@ -281,5 +284,11 @@ class ImportRiwayatPangkatForm(BootstrapFormMixin, forms.Form):
 class ImportRiwayatPendidikanForm(BootstrapFormMixin, forms.Form):
     file_excel = forms.FileField(
         label="Pilih File Excel / CSV Data Riwayat Pendidikan",
+        widget=forms.FileInput(attrs={'accept': '.xlsx, .xls, .csv'})
+    )
+
+class ImportPerpanjanganKontrakForm(BootstrapFormMixin, forms.Form):
+    file_excel = forms.FileField(
+        label="Pilih File Excel / CSV Data Perpanjangan Kontrak",
         widget=forms.FileInput(attrs={'accept': '.xlsx, .xls, .csv'})
     )
