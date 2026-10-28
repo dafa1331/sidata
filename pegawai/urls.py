@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from pegawai.views.proyeksi_views import proyeksi_habis_kontrak_view
 
+
 urlpatterns = [
     # Master Pegawai
     path('', views.pegawai_list, name='pegawai_list'),

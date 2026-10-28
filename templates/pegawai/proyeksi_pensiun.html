@@ -33,7 +33,7 @@
 {% if tahun_selected %}
 <div class="row mb-3">
   <div class="col-12">
-    <div class="btn-group btn-group-sm" role="group">
+    <div class="btn-group btn-group-sm flex-wrap" role="group">
       <a href="?tahun={{ tahun_selected }}" class="btn btn-outline-dark {% if not bulan_selected %}active{% endif %}">Semua Bulan</a>
       <a href="?tahun={{ tahun_selected }}&bulan=1" class="btn btn-outline-dark {% if bulan_selected == '1' %}active{% endif %}">Jan</a>
       <a href="?tahun={{ tahun_selected }}&bulan=2" class="btn btn-outline-dark {% if bulan_selected == '2' %}active{% endif %}">Feb</a>
@@ -56,13 +56,13 @@
 <div class="card shadow-sm">
   <div class="card-header d-flex justify-content-between align-items-center py-3">
     <h5 class="mb-0 fw-bold">Daftar Pegawai Memasuki BUP</h5>
-    <span class="badge bg-primary fs-6">Total: {{ detail_proyeksi|length }} Pegawai</span>
+    <span class="badge bg-primary fs-6">Total: {{ total_items }} Pegawai</span>
   </div>
   <div class="table-responsive text-nowrap">
-    <table class="table table-hover align-middle">
+    <table class="table table-hover align-middle mb-0">
       <thead>
         <tr>
-          <th>No</th>
+          <th style="width: 50px;">No</th>
           <th>NIP & Nama Pegawai</th>
           <th>Jabatan Terakhir</th>
           <th>Usia BUP</th>
@@ -71,9 +71,9 @@
         </tr>
       </thead>
       <tbody>
-        {% for d in detail_proyeksi %}
+        {% for d in page_obj %}
         <tr class="{% if d.is_ready %}table-warning{% endif %}">
-          <td>{{ forloop.counter }}</td>
+          <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
           <td>
             <strong>{{ d.pegawai.nama_dengan_gelar }}</strong>
             <small class="d-block text-muted">NIP. {{ d.pegawai.nip }}</small>
@@ -111,6 +111,10 @@
               </div>
               <form action="{% url 'eksekusi_pensiun' d.pegawai.pk %}" method="post">
                 {% csrf_token %}
+                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                <input type="hidden" name="tahun" value="{{ tahun_selected|default:'' }}">
+                <input type="hidden" name="bulan" value="{{ bulan_selected|default:'' }}">
+                
                 <div class="modal-body py-3 text-start">
                   <p class="mb-3">Proses perubahan status pegawai menjadi <strong>PENSIUN</strong> untuk:</p>
                   <div class="p-2 bg-light rounded mb-3 border">
@@ -128,7 +132,7 @@
                   </div>
                   <div class="mb-3">
                     <label class="form-label fw-bold">Pejabat Penetap</label>
-                    <input type="text" name="pejabat_penetap" class="form-control" placeholder="Contoh: Kepala BKN / Bupati">
+                    <input type="text" name="pejabat_penetap" class="form-control" placeholder="Contoh: Kepala BKN / Wali Kota">
                   </div>
                 </div>
                 <div class="modal-footer">
@@ -147,5 +151,54 @@
       </tbody>
     </table>
   </div>
+
+  <!-- NAVIGASI PAGINATION -->
+  {% if page_obj.has_other_pages %}
+  <div class="card-footer d-flex justify-content-between align-items-center py-3">
+    <small class="text-muted">
+      Menampilkan {{ page_obj.start_index }} - {{ page_obj.end_index }} dari {{ total_items }} data
+    </small>
+    <nav aria-label="Navigasi Halaman Proyeksi">
+      <ul class="pagination pagination-sm mb-0">
+        <!-- Tombol First & Previous -->
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{% if tahun_selected %}&tahun={{ tahun_selected }}{% endif %}{% if bulan_selected %}&bulan={{ bulan_selected }}{% endif %}"><i class="bx bx-chevrons-left"></i></a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if tahun_selected %}&tahun={{ tahun_selected }}{% endif %}{% if bulan_selected %}&bulan={{ bulan_selected }}{% endif %}"><i class="bx bx-chevron-left"></i></a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="bx bx-chevrons-left"></i></span></li>
+          <li class="page-item disabled"><span class="page-link"><i class="bx bx-chevron-left"></i></span></li>
+        {% endif %}
+
+        <!-- Nombor Halaman Aktif +/- 2 Halaman -->
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}{% if tahun_selected %}&tahun={{ tahun_selected }}{% endif %}{% if bulan_selected %}&bulan={{ bulan_selected }}{% endif %}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        <!-- Tombol Next & Last -->
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if tahun_selected %}&tahun={{ tahun_selected }}{% endif %}{% if bulan_selected %}&bulan={{ bulan_selected }}{% endif %}"><i class="bx bx-chevron-right"></i></a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if tahun_selected %}&tahun={{ tahun_selected }}{% endif %}{% if bulan_selected %}&bulan={{ bulan_selected }}{% endif %}"><i class="bx bx-chevrons-right"></i></a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link"><i class="bx bx-chevron-right"></i></span></li>
+          <li class="page-item disabled"><span class="page-link"><i class="bx bx-chevrons-right"></i></span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

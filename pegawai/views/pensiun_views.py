@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
 from django.urls import reverse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from pegawai.models import Pegawai, RiwayatJabatan, RiwayatKepegawaian
 
@@ -13,7 +14,9 @@ from pegawai.models import Pegawai, RiwayatJabatan, RiwayatKepegawaian
 def proyeksi_pensiun_view(request):
     tahun_selected = request.GET.get('tahun')
     bulan_selected = request.GET.get('bulan')
+    page_number = request.GET.get('page', 1)
     
+    # Ambil pegawai aktif yang berusia minimal 50 tahun
     batas_tgl_lahir = date.today() - relativedelta(years=50)
     
     pegawai_aktif = Pegawai.objects.filter(
@@ -29,6 +32,7 @@ def proyeksi_pensiun_view(request):
 
     proyeksi_list = []
     agregasi_tahun = {}
+    today = date.today()
 
     for p in pegawai_aktif:
         jabatan_terakhir = p.prefetched_jabatan_list[0] if p.prefetched_jabatan_list else None
@@ -36,7 +40,7 @@ def proyeksi_pensiun_view(request):
         usia_bup = 58
         if jabatan_terakhir and jabatan_terakhir.jabatan:
             obj_j = jabatan_terakhir.jabatan
-            nama_j = obj_j.nama_jabatan.lower() if obj_j.nama_jabatan else ''
+            nama_j = (obj_j.nama_jabatan or '').lower()
             jenis = (obj_j.jenis.nama if obj_j.jenis else '').lower()
             jenjang = (obj_j.jenjang.nama if obj_j.jenjang else '').lower()
             eselon = (obj_j.eselon if hasattr(obj_j, 'eselon') and obj_j.eselon else '').lower()
@@ -64,23 +68,38 @@ def proyeksi_pensiun_view(request):
                 'bulan': bln,
                 'usia_bup': usia_bup,
                 'jabatan': jabatan_terakhir,
-                'is_ready': tmt_p <= date.today()
+                'is_ready': tmt_p <= today
             })
 
+    # Rekap per tahun (diurutkan)
     rekap_tahun = sorted([{'tahun': k, 'jumlah': v} for k, v in agregasi_tahun.items()], key=lambda x: x['tahun'])
 
+    # Filter berdasarkan pilihan Tahun & Bulan
     detail_proyeksi = proyeksi_list
     if tahun_selected:
         detail_proyeksi = [x for x in detail_proyeksi if str(x['tahun']) == str(tahun_selected)]
         if bulan_selected:
             detail_proyeksi = [x for x in detail_proyeksi if str(x['bulan']) == str(bulan_selected)]
 
+    # Urutkan berdasarkan TMT Pensiun terdekat
     detail_proyeksi = sorted(detail_proyeksi, key=lambda x: x['tmt_pensiun'])
+
+    # --- FITUR PAGINASI SERVER-SIDE ---
+    total_items = len(detail_proyeksi)
+    paginator = Paginator(detail_proyeksi, 25) # 25 data per halaman
+
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
 
     context = {
         'title': 'Proyeksi Pensiun Pegawai',
         'rekap_tahun': rekap_tahun,
-        'detail_proyeksi': detail_proyeksi,
+        'page_obj': page_obj,
+        'total_items': total_items,
         'tahun_selected': tahun_selected,
         'bulan_selected': bulan_selected,
     }
@@ -92,12 +111,21 @@ def eksekusi_pensiun_action(request, pegawai_id):
     if request.method == 'POST':
         pegawai = get_object_or_404(Pegawai, pk=pegawai_id)
         page_number = request.POST.get('page', '1')
+        tahun_selected = request.POST.get('tahun', '')
+        bulan_selected = request.POST.get('bulan', '')
         
         nomor_sk = request.POST.get('nomor_sk', '').strip()
         tanggal_sk = request.POST.get('tanggal_sk', '').strip()
         pejabat_penetap = request.POST.get('pejabat_penetap', '').strip()
 
-        redirect_url = f"{reverse('pegawai:proyeksi_pensiun')}?page={page_number}"
+        # Menyusun query string agar user kembali ke halaman & filter yang sama
+        query_params = f"?page={page_number}"
+        if tahun_selected:
+            query_params += f"&tahun={tahun_selected}"
+            if bulan_selected:
+                query_params += f"&bulan={bulan_selected}"
+
+        redirect_url = f"{reverse('pegawai:proyeksi_pensiun')}{query_params}"
 
         if not nomor_sk or not tanggal_sk:
             messages.error(request, 'Nomor SK dan Tanggal SK wajib diisi!')
@@ -105,7 +133,7 @@ def eksekusi_pensiun_action(request, pegawai_id):
 
         try:
             with transaction.atomic():
-                tmt_pensiun_val = pegawai.tmt_pensiun or date.today()
+                tmt_pensiun_val = getattr(pegawai, 'tmt_pensiun', None) or date.today()
                 
                 RiwayatKepegawaian.objects.create(
                     pegawai=pegawai,
@@ -115,6 +143,10 @@ def eksekusi_pensiun_action(request, pegawai_id):
                     tanggal_sk=tanggal_sk,
                     keterangan=f"Penetapan Pensiun BUP. Pejabat Penetap: {pejabat_penetap or '-'}"
                 )
+                
+                # Update status keaktifan pegawai
+                pegawai.status_keaktifan = 'PENSIUN'
+                pegawai.save(update_fields=['status_keaktifan'])
 
             messages.success(request, f'Berhasil memproses pensiun untuk {pegawai.nama_dengan_gelar}. Status telah diperbarui menjadi PENSIUN.')
             return redirect(redirect_url)
