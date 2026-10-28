@@ -533,74 +533,137 @@ def riwayat_pendidikan_import(request):
 
 @login_required
 def import_perpanjangan_kontrak(request):
-    if request.method == 'POST':
-        form = ImportPerpanjanganKontrakForm(request.POST, request.FILES)
-        if form.is_valid():
-            excel_file = request.FILES.get('file_excel')
-            
-            try:
-                # Membaca file excel menggunakan pandas
-                df = pd.read_excel(excel_file)
-                
-                success_count = 0
-                error_count = 0
-                not_found_nips = []
-                
-                for index, row in df.iterrows():
-                    nip = str(row.get('NIP', '')).strip()
-                    # Default ke PERPANJANGAN_PPPK jika kolom kosong
-                    jenis_transaksi = str(row.get('Jenis Transaksi', 'PERPANJANGAN_PPPK')).strip().upper()
-                    tmt = row.get('TMT Mulai')
-                    tmt_selesai = row.get('TMT Selesai')
-                    nomor_sk = str(row.get('Nomor SK', '')).strip()
-                    tanggal_sk = row.get('Tanggal SK')
-                    keterangan = str(row.get('Keterangan', '')).strip()
-                    
-                    # Cari pegawai berdasarkan NIP
-                    try:
-                        pegawai = Pegawai.objects.get(nip=nip)
-                    except Pegawai.DoesNotExist:
-                        error_count += 1
-                        not_found_nips.append(nip)
-                        continue
-                    
-                    # Konversi format tanggal dari excel ke format date Python
-                    if pd.notna(tmt):
-                        tmt = pd.to_datetime(tmt).date()
-                    if pd.notna(tmt_selesai):
-                        tmt_selesai = pd.to_datetime(tmt_selesai).date()
-                    if pd.notna(tanggal_sk):
-                        tanggal_sk = pd.to_datetime(tanggal_sk).date()
-                    
-                    # Simpan ke RiwayatKepegawaian 
-                    # (method save() otomatis mengubah status keaktifan pegawai jika jenis_transaksi='PENSIUN')
-                    RiwayatKepegawaian.objects.create(
-                        pegawai=pegawai,
-                        jenis_transaksi=jenis_transaksi,
-                        tmt=tmt,
-                        tmt_selesai=tmt_selesai if pd.notna(tmt_selesai) else None,
-                        nomor_sk=nomor_sk,
-                        tanggal_sk=tanggal_sk,
-                        keterangan=keterangan
-                    )
-                    success_count += 1
-                
-                # Buat pesan informasi dinamis
-                msg = f"Berhasil memproses {success_count} data kontrak / pensiun."
-                if error_count > 0:
-                    daftar_nip = ", ".join(not_found_nips)
-                    msg += f" Gagal: {error_count} data. NIP tidak ditemukan: [{daftar_nip}]"
-                    messages.warning(request, msg)
-                else:
-                    messages.success(request, msg)
-                    
-                return redirect('dashboard')
-                
-            except Exception as e:
-                messages.error(request, f"Terjadi kesalahan saat memproses file: {e}")
+  if request.method == 'POST':
+    form = ImportPerpanjanganKontrakForm(request.POST, request.FILES)
+    if form.is_valid():
+      excel_file = request.FILES['file_excel']
+
+      try:
+        # 1. Baca file Excel menggunakan pandas (ambil kolom yang diperlukan saja jika ingin lebih hemat memori)
+        df = pd.read_excel(excel_file)
+
+        # Ganti NaN dengan None agar aman untuk database
+        df = df.where(pd.notnull(df), None)
+
+        success_count = 0
+        error_count = 0
+        not_found_nips = []
+
+        # 2. OPTIMASI QUERY: Ambil semua NIP pegawai yang ada di database ke dalam dictionary/set
+        # Ini menghindari query .get() berulang-ulang di dalam loop (mencegah N+1 Query Problem)
+        nips_in_excel = [
+            str(nip).strip() for nip in df['NIP'].dropna().unique()
+        ]
+        pegawai_dict = {
+            p.nip: p for p in Pegawai.objects.filter(nip__in=nips_in_excel)
+        }
+
+        # List untuk menampung objek yang akan di-bulk_create
+        riwayat_list = []
+
+        for index, row in df.iterrows():
+          nip = str(row.get('NIP', '')).strip()
+          if not nip or nip == 'None':
+            continue
+
+          # Cek apakah pegawai ada di dictionary yang sudah diload
+          pegawai = pegawai_dict.get(nip)
+          if not pegawai:
+            error_count += 1
+            if nip not in not_found_nips:
+              not_found_nips.append(nip)
+            continue
+
+          # Ambil data kolom lainnya
+          jenis_transaksi = (
+              str(row.get('Jenis Transaksi', 'PERPANJANGAN_PPPK'))
+              .strip()
+              .upper()
+          )
+          if not jenis_transaksi or jenis_transaksi == 'NONE':
+            jenis_transaksi = 'PERPANJANGAN_PPPK'
+
+          tmt = row.get('TMT Mulai')
+          tmt_selesai = row.get('TMT Selesai')
+          nomor_sk = str(row.get('Nomor SK', '')).strip()
+          tanggal_sk = row.get('Tanggal SK')
+          keterangan = str(row.get('Keterangan', '')).strip()
+
+          # Konversi tanggal aman dari pandas/excel
+          try:
+            tmt = (
+                pd.to_datetime(tmt).date()
+                if tmt is not None and str(tmt).strip() != ''
+                else None
+            )
+            tmt_selesai = (
+                pd.to_datetime(tmt_selesai).date()
+                if tmt_selesai is not None and str(tmt_selesai).strip() != ''
+                else None
+            )
+            tanggal_sk = (
+                pd.to_datetime(tanggal_sk).date()
+                if tanggal_sk is not None and str(tanggal_sk).strip() != ''
+                else None
+            )
+          except Exception:
+            # Jika format tanggal rusak, catat sebagai error atau abaikan baris ini
+            error_count += 1
+            continue
+
+          # Masukkan ke objek model (belum disimpan ke DB agar cepat)
+          riwayat_list.append(
+              RiwayatKepegawaian(
+                  pegawai=pegawai,
+                  jenis_transaksi=jenis_transaksi,
+                  tmt=tmt,
+                  tmt_selesai=tmt_selesai,
+                  nomor_sk=nomor_sk if nomor_sk != 'nan' else '',
+                  tanggal_sk=tanggal_sk,
+                  keterangan=keterangan if keterangan != 'nan' else '',
+              )
+          )
+          success_count += 1
+
+        # 3. BULK INSERT: Simpan secara sekaligus ke database (jauh lebih cepat & tidak bikin server berat)
+        if riwayat_list:
+          # Catatan: Jika model RiwayatKepegawaian Anda mengandalkan method .save() kustom
+          # untuk mengubah status keaktifan, bulk_create tidak memicu .save().
+          # Jika butuh .save() manual per item, kita bisa chunking menggunakan transaction.atomic()
+          RiwayatKepegawaian.objects.bulk_create(riwayat_list, batch_size=500)
+
+        # Buat pesan informasi dinamis
+        msg = f'Berhasil memproses {success_count} data kontrak / pensiun.'
+        if error_count > 0:
+          daftar_nip = (
+              ', '.join(not_found_nips[:20])
+              + ('...' if len(not_found_nips) > 20 else '')
+          )
+          msg += (
+              f' Gagal/NIP tidak valid: {error_count} data. Contoh NIP:'
+              f' [{daftar_nip}]'
+          )
+          messages.warning(request, msg)
         else:
-            messages.error(request, "Terjadi kesalahan pada validasi form. Silakan periksa kembali file Anda.")
+          messages.success(request, msg)
+
+        return redirect('dashboard')
+
+      except Exception as e:
+        messages.error(
+            request, f'Terjadi kesalahan saat memproses file Excel: {e}'
+        )
     else:
-        form = ImportPerpanjanganKontrakForm()
-        
-    return render(request, 'pegawai/perpanjangan_kontrak_import.html', {'form': form, 'title': 'Import Perpanjangan Kontrak & Pensiun Excel'})
+      messages.error(
+          request,
+          'Terjadi kesalahan pada validasi form. Silakan periksa kembali file'
+          ' Anda.',
+      )
+  else:
+    form = ImportPerpanjanganKontrakForm()
+
+  return render(
+      request,
+      'pegawai/perpanjangan_kontrak_import.html',
+      {'form': form, 'title': 'Import Perpanjangan Kontrak & Pensiun Excel'},
+  )
