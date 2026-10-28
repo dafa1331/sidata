@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="row">
+        <!-- Kolom Form Tambah/Edit -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">Tambah / Edit Jenis Dokumen</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="doc_id" id="doc_id">
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label font-weight-bold small">Nama Dokumen</label>
+                            <input type="text" name="nama_dokumen" id="nama_dokumen" class="form-control" placeholder="Contoh: SK Pengangkatan" required>
+                        </div>
+
+                        <div class="form-group mb-3 form-check">
+                            <input type="checkbox" name="wajib" id="wajib" class="form-check-input" checked>
+                            <label class="form-check-label small" for="wajib">Wajib (Mandatory)</label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">Simpan Dokumen</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kolom Tabel Daftar Dokumen -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Daftar Dokumen Persyaratan</h6>
+                    <a href="{% url 'admin_rekap' %}" class="btn btn-secondary btn-sm">← Kembali ke Rekap</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-sm" width="100%">
+                            <thead class="thead-light">
+                                <tr class="text-center">
+                                    <th width="10%">No</th>
+                                    <th>Nama Dokumen</th>
+                                    <th width="20%">Status</th>
+                                    <th width="20%">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in jenis_docs %}
+                                <tr>
+                                    <td class="text-center">{{ forloop.counter }}</td>
+                                    <td>{{ doc.nama_dokumen }}</td>
+                                    <td class="text-center">
+                                        {% if doc.wajib %}
+                                            <span class="badge bg-danger text-white">Wajib</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary text-white">Opsional</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <button
+                                            type="button"
+                                            class="btn btn-warning btn-sm text-white btn-edit-doc"
+                                            title="Edit"
+                                            data-id="{{ doc.id }}"
+                                            data-nama="{{ doc.nama_dokumen|escape }}"
+                                            data-wajib="{{ doc.wajib|yesno:'true,false' }}">
+                                            ✏️
+                                        </button>
+                                        <a href="{% url 'admin_jenis_dokumen_delete' doc.id %}" onclick="return confirm('Yakin ingin menghapus dokumen ini?')" class="btn btn-danger btn-sm" title="Hapus">
+                                            🗑️
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">Belum ada jenis dokumen yang diatur.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editDoc(id, nama, wajib) {
+    document.getElementById('doc_id').value = id;
+    document.getElementById('nama_dokumen').value = nama;
+    document.getElementById('wajib').checked = wajib;
+}
+</script>
+{% endblock %}

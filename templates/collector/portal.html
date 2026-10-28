@@ -1,0 +1,161 @@
+{% load collector_extras %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Pengumpulan Dokumen PPPK - Pemkot Metro</title>
+    <!-- Menggunakan Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col justify-between font-sans text-slate-800">
+
+    <!-- Top Government Bar / Header Banner -->
+    <header class="bg-blue-900 border-b-4 border-amber-400 shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <!-- Logo Resmi Pemerintah Kota Metro -->
+                <div class="w-10 h-10 flex items-center justify-center shrink-0">
+                    <img src="https://jdih.metrokota.go.id/images/logo/lambangmetro.png" alt="Logo Kota Metro" class="w-full h-full object-contain drop-shadow">
+                </div>
+                <div>
+                    <h2 class="text-white font-bold text-sm md:text-base tracking-wide uppercase">Pemerintah Kota Metro</h2>
+                    <p class="text-blue-200 text-xs">Badan Kepegawaian dan Pengembangan Sumber Daya Manusia (BKPSDM)</p>
+                </div>
+            </div>
+            <div class="hidden md:block text-right">
+                <span class="inline-block bg-blue-800 text-blue-100 text-xs px-3 py-1 rounded-full border border-blue-700">
+                    Layanan Upload Dokumen Perpanjangan PPPK
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-2xl w-full mx-auto p-4 md:p-6 my-6">
+        <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+            
+            <!-- Card Header Title -->
+            <div class="bg-slate-50 border-b border-slate-100 p-6 text-center">
+                <h1 class="text-xl md:text-2xl font-bold text-blue-900">Portal Dokumen Perpanjangan PPPK</h1>
+                <p class="text-xs md:text-sm text-slate-500 mt-1">Unggah dokumen perpanjangan PPPK secara digital</p>
+            </div>
+
+            <div class="p-6">
+                <!-- Alert Notifikasi Pesan -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="p-4 mb-6 rounded-lg text-sm border flex items-center gap-2 {% if message.tags == 'error' %}bg-red-50 border-red-200 text-red-700{% else %}bg-emerald-50 border-emerald-200 text-emerald-700{% endif %}">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if step == 1 %}
+                <!-- ================= STEP 1: VERIFIKASI NIP & TGL LAHIR ================= -->
+                <div class="mb-4 bg-blue-50 border-l-4 border-blue-600 p-4 text-xs text-blue-800 rounded-r-lg">
+                    <span class="font-bold">Perhatian:</span> Masukkan 18 digit NIP dan Tanggal Lahir sesuai dengan data kepegawaian resmi Anda untuk masuk ke sistem.
+                </div>
+
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_verify" value="1">
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">NIP PPPK</label>
+                        <input type="text" name="nip" placeholder="Contoh: 199001012022211001" maxlength="18" required 
+                               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none bg-slate-50">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Lahir</label>
+                        <input type="date" name="tanggal_lahir" required 
+                               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none bg-slate-50">
+                        <span class="text-xs text-slate-400 mt-1 block">Format: Bulan / Hari / Tahun atau pilih dari kalender.</span>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2.5 rounded-lg transition shadow-sm text-sm">
+                        Verifikasi & Lanjutkan
+                    </button>
+                </form>
+
+                {% else %}
+                <!-- ================= STEP 2: FORM UPLOAD BERKAS ================= -->
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-100 px-2 py-0.5 rounded">Pegawai Terverifikasi</span>
+                        <h2 class="font-bold text-blue-900 text-base md:text-lg mt-1">{{ pegawai.nama }}</h2>
+                        <p class="text-xs text-blue-700">NIP: {{ pegawai.nip }}</p>
+                    </div>
+                    <form method="POST" class="m-0 self-end sm:self-center">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_logout" value="1">
+                        <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-semibold bg-white border border-red-200 px-3 py-1.5 rounded-md shadow-sm transition">
+                            Keluar / Bukan Saya
+                        </button>
+                    </form>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_upload" value="1">
+
+                    <div class="space-y-3">
+                        {% for doc in jenis_docs %}
+                            {% with uploaded=uploaded_files|get_item:doc.id %}
+                            <div class="border border-slate-200 rounded-lg p-4 bg-white hover:border-slate-300 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <label class="font-semibold text-slate-800 text-sm">
+                                            {{ doc.nama_dokumen }}
+                                        </label>
+                                        {% if doc.wajib %}
+                                            <span class="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">Wajib</span>
+                                        {% else %}
+                                            <span class="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">Opsional</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mt-1">
+                                        {% if uploaded %}
+                                            <span class="inline-flex items-center text-xs px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md font-medium">
+                                                ✓ Sudah Diunggah
+                                            </span>
+                                            <a href="{{ uploaded.file.url }}" target="_blank" class="text-xs text-blue-600 hover:underline font-semibold ml-2">
+                                                Lihat Berkas PDF ↗
+                                            </a>
+                                        {% else %}
+                                            <span class="inline-flex items-center text-xs px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md">
+                                                ⏳ Belum Diunggah
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="w-full md:w-auto">
+                                    <input type="file" name="doc_{{ doc.id }}" accept=".pdf" 
+                                           class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg">
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg transition shadow text-sm">
+                        Simpan & Upload Berkas Persyaratan
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Pemerintah -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+        <div class="max-w-4xl mx-auto px-4 text-center text-xs text-slate-500">
+            © 2026 • Badan Kepegawaian dan Pengembangan Sumber Daya Manusia (BKPSDM) Kota Metro
+        </div>
+    </footer>
+
+</body>
+</html>
