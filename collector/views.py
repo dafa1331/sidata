@@ -8,6 +8,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import models
 import openpyxl
+from django.urls import reverse
+from django.core.files.storage import default_storage
 from django.core.paginator import Paginator # Pastikan sudah di-import
 
 # Impor model Pegawai dari app pegawai
@@ -118,16 +120,21 @@ def portal_upload(request):
 def admin_rekap_view(request):
     """
     Halaman Dashboard Admin Rekapitulasi Berkas PPPK dengan Server-Side Pagination
+    Hanya menampilkan pegawai yang sudah mengunggah minimal 1 dokumen.
     """
     jenis_docs = JenisDokumen.objects.all()
     
-    # Ambil parameter pencarian & filter dari URL (jika ada)
+    # Ambil parameter pencarian & filter dari URL
     search_query = request.GET.get('q', '').strip()
     selected_opd = request.GET.get('opd', '').strip()
 
-    # Query dasar khusus PPPK
+    # OPTIMASI: Hanya ambil pegawai PPPK yang BERKASNYA SUDAH ADA (menggunakan Exists)
+    # Ini langsung menyaring di database sehingga yang belum upload tidak ikut ter-load
+    subquery_berkas = BerkasPPPK.objects.filter(pegawai=models.OuterRef('pk'))
+    
     pegawai_list = Pegawai.objects.filter(
-        models.Q(riwayat_kepegawaian__jenis_transaksi__icontains='pppk')
+        models.Q(riwayat_kepegawaian__jenis_transaksi__icontains='pppk'),
+        models.Exists(subquery_berkas)
     ).distinct().order_by('nama_lengkap')
 
     # Filter pencarian NIP atau Nama
@@ -137,23 +144,26 @@ def admin_rekap_view(request):
             models.Q(nip__icontains=search_query)
         )
 
+    # Optimasi OPD: Jika ada filter OPD, kita lakukan pengecekan secara efisien atau 
+    # jika fungsi get_opd_pegawai berupa query, kita bisa sesuaikan. 
+    # Karena get_opd_pegawai adalah fungsi helper python, kita saring list-nya tapi 
+    # dengan prefetch atau struktur yang lebihringan.
     rekap_list = []
-    # Optimasi: Kita proses data yang sudah difilter per halaman agar tidak berat
     for p in pegawai_list:
         nama_opd = get_opd_pegawai(p)
         
-        # Filter berdasarkan OPD jika dipilih di dropdown filter
+        # Filter berdasarkan OPD jika dipilih di dropdown
         if selected_opd and selected_opd.lower() not in nama_opd.lower():
             continue
             
         rekap_list.append((p, nama_opd))
 
-    # Konfigurasi Paginator (Contoh: 10 atau 15 data per halaman)
+    # Konfigurasi Paginator (10 data per halaman agar ringan)
     paginator = Paginator(rekap_list, 10) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Mapping berkas hanya untuk data pegawai yang tampil di halaman aktif saja
+    # Mapping berkas HANYA untuk data pegawai yang tampil di halaman aktif saja
     rekap_data = []
     for idx, (p, nama_opd) in enumerate(page_obj, start=page_obj.start_index()):
         berkas_map = {b.jenis_dokumen_id: b for b in BerkasPPPK.objects.filter(pegawai=p)}
@@ -292,3 +302,43 @@ def admin_jenis_dokumen_delete(request, pk):
     doc.delete()
     messages.success(request, "Jenis dokumen berhasil dihapus.")
     return redirect('admin_jenis_dokumen')
+
+@login_required
+def hapus_pegawai_rekap_view(request, pegawai_id):
+    if request.method == 'POST':
+        pegawai = get_object_or_404(Pegawai, pk=pegawai_id)
+        
+        # Ambil parameter query/page/opd agar posisi filter/halaman tidak hilang setelah redirect
+        page = request.POST.get('page', '1')
+        q = request.POST.get('q', '')
+        opd = request.POST.get('opd', '')
+        
+        # 1. Ambil semua data berkas milik pegawai ini sebelum dihapus dari database
+        berkas_list = BerkasPPPK.objects.filter(pegawai=pegawai)
+        
+        # 2. Hapus file fisik satu per satu dari folder penyimpanan server
+        for berkas in berkas_list:
+            if berkas.file and default_storage.exists(berkas.file.name):
+                default_storage.delete(berkas.file.name)
+        
+        # 3. Hapus record data dari tabel BerkasPPPK di database
+        deleted_count, _ = berkas_list.delete()
+        
+        nama = getattr(pegawai, 'nama_lengkap', 'Pegawai')
+        if deleted_count > 0:
+            messages.success(request, f"Seluruh berkas dan file fisik PPPK untuk {nama} berhasil dihapus permanen.")
+        else:
+            messages.warning(request, f"Tidak ada berkas ditemukan untuk pegawai {nama}.")
+        
+        # 4. Redirect kembali ke halaman rekap (Gunakan nama URL rute Anda, misal 'admin_rekap')
+        # Pastikan tidak menggunakan awalan '/admin/rekap/' agar tidak error 404 admin django
+        redirect_url = reverse('admin_rekap') # Sesuaikan dengan nama url rekap Anda, misal 'admin_rekap'
+        redirect_url = f"{redirect_url}?page={page}" # Sesuaikan path URL rekap Anda
+        if q:
+            redirect_url += f"&q={q}"
+        if opd:
+            redirect_url += f"&opd={opd}"
+            
+        return redirect(redirect_url)
+        
+    return redirect('admin_rekap')

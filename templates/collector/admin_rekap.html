@@ -46,16 +46,17 @@
         <!-- Tabel Rekap -->
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover text-sm" width="100%" cellspacing="0">
+                <table class="table table-bordered table-hover text-sm align-middle" width="100%" cellspacing="0">
                     <thead class="thead-light">
                         <tr>
                             <th width="5%">No</th>
-                            <th width="22%">NIP / Nama</th>
-                            <th width="20%">OPD / Unit Kerja</th>
-                            <th width="10%" class="text-center">Status</th>
+                            <th width="20%">NIP / Nama</th>
+                            <th width="18%">OPD / Unit Kerja</th>
+                            <th width="8%" class="text-center">Status</th>
                             {% for doc in jenis_docs %}
                                 <th class="text-center">{{ doc.nama_dokumen }}</th>
                             {% endfor %}
+                            <th width="10%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,7 +65,7 @@
                             <td class="text-center">{{ item.no }}</td>
                             <td>
                                 <div class="font-weight-bold text-dark">{{ item.pegawai.nama_lengkap }}</div>
-                                <div class="text-muted small">{{ item.pegawai.nip }}</div>
+                                <div class="text-muted small">NIP. {{ item.pegawai.nip }}</div>
                             </td>
                             <td>{{ item.opd }}</td>
                             <td class="text-center">
@@ -89,10 +90,49 @@
                                     {% endwith %}
                                 </td>
                             {% endfor %}
+
+                            <!-- Kolom Tombol Hapus Berkas -->
+                            <td class="text-center">
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalHapus{{ item.pegawai.id }}" title="Hapus Berkas">
+                                    🗑️ Hapus
+                                </button>
+
+                                <!-- Modal Konfirmasi Hapus -->
+                                <div class="modal fade" id="modalHapus{{ item.pegawai.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content text-start">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title text-white">Konfirmasi Hapus Berkas</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{% url 'hapus_pegawai_rekap' item.pegawai.id %}" method="POST">
+                                                {% csrf_token %}
+                                                <!-- Menyimpan parameter halaman & pencarian agar tidak hilang setelah redirect -->
+                                                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                                {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                                                {% if selected_opd %}<input type="hidden" name="opd" value="{{ selected_opd }}">{% endif %}
+
+                                                <div class="modal-body py-3">
+                                                    <p class="mb-2">Apakah Anda yakin ingin menghapus <strong>seluruh berkas unggahan</strong> untuk pegawai berikut?</p>
+                                                    <div class="p-2 bg-light rounded border">
+                                                        <strong>{{ item.pegawai.nama_lengkap }}</strong><br>
+                                                        <small class="text-muted">NIP: {{ item.pegawai.nip }}</small>
+                                                    </div>
+                                                    <small class="text-danger d-block mt-2">⚠️ Berkas fisik akan dihapus dan pegawai ini akan hilang dari daftar rekap (status kembali belum upload).</small>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Ya, Hapus Berkas</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="{{ jenis_docs.count|add:4 }}" class="text-center py-4 text-muted">Tidak ada data pegawai PPPK yang ditemukan.</td>
+                            <td colspan="{{ jenis_docs.count|add:5 }}" class="text-center py-4 text-muted">Tidak ada data pegawai PPPK yang ditemukan.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

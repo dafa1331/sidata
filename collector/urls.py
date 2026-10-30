@@ -12,4 +12,6 @@ urlpatterns = [
     path('rekap/excel/', views.export_rekap_excel, name='export_rekap_excel'),
     path('rekap/zip/', views.download_bulk_zip, name='download_bulk_zip'),
     path('rekap/zip/<str:opd_name>/', views.download_bulk_zip, name='download_bulk_zip_opd'),
+
+    path('rekap/hapus-berkas/<int:pegawai_id>/', views.hapus_pegawai_rekap_view, name='hapus_pegawai_rekap'),
 ]
